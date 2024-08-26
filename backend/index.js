@@ -10,6 +10,7 @@ const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('./config');
 
 app.use(express.json());
+app.use(cors());
 
 const signupBody = zod.object({
     username: zod.string().email(),
@@ -30,6 +31,7 @@ app.get('/', (req, res) => {
 
 app.post('/signup',async (req,res)=>{
     const { success } = signupBody.safeParse(req.body)
+    console.log(req.body)
     if (!success) {
         return res.status(411).json({
             message: "Incorrect inputs"
