@@ -1,4 +1,13 @@
+import Spreadsheet from "react-spreadsheet";
+import { useState } from "react";
+
 function Appbar() {
+
+    let rows = 100;
+    let columns = 26;
+    let dataa = Array(rows).fill().map(() => Array(columns).fill().map(() => ({ value: "" })));
+    const [data, setData] = useState(dataa);
+
     return (
       <>
         <div className="shadow h-36 flex justify-evenly text-[1.2rem]">
@@ -83,7 +92,9 @@ function Appbar() {
               </div>
               </div>
         </div>
-  
+
+        <Spreadsheet data={data} onChange={setData} />
+
       </>
     );
   }
