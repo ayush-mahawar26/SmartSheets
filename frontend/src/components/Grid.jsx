@@ -1,6 +1,7 @@
 import React from 'react'
 import Spreadsheet from "react-spreadsheet";
 import { useState } from "react";
+import "./Appbar.css";
 
 const Grid = () => {
 
@@ -30,7 +31,7 @@ const Grid = () => {
 
         .
         <div className="mt-36">
-            <div className="fixed bg-[#EAF1FF] h-12 w-screen flex items-center text-[1rem] rounded">
+            <div className="formula fixed bg-[#EAF1FF] h-12 w-screen flex items-center text-[1rem] rounded">
             <div className="ml-12 flex justify-center items-center h-full w-screen rounded-l-full m">
                 fx
                 <input

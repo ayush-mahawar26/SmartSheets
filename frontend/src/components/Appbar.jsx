@@ -6,7 +6,7 @@ import Grid from "./Grid";
 function Appbar() {
   return (
     <>
-      <div className="navbar h-40">
+      <div className="navbar h-44">
         {/* logo */}
         <div className="div1">
           <img
