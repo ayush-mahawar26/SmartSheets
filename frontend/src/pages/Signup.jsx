@@ -13,7 +13,7 @@ function signup() {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [username, setUserName] = useState("");
+  const [useremail, setuseremail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
@@ -38,7 +38,7 @@ function signup() {
             } placeholder="Enter Your LastName" label={"Last Name"} />
             <InputBox onChange={
               (e) => {
-                setUserName(e.target.value);
+                setuseremail(e.target.value);
               }
             } placeholder="Enter Your UserName" label={"User Name"} />
             <InputBox onChange={
@@ -49,9 +49,9 @@ function signup() {
             <div className="pt-4">
               <Button onClick={
                 async () => {
-                  console.log(firstName, lastName, username, password);
-                  const resp = await axios.post("http://localhost:3000/signup", {
-                    username,
+                  console.log(firstName, lastName, useremail, password);
+                  const resp = await axios.post("http://localhost:3000/user/signup", {
+                    useremail,
                     firstName,
                     lastName,
                     password
