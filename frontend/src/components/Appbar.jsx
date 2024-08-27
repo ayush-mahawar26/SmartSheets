@@ -1,23 +1,12 @@
-import Spreadsheet from "react-spreadsheet";
 import { useState } from "react";
 import "./Appbar.css";
 import smartsheets from "../assets/smartsheets.png";
+import Grid from "./Grid";
 
 function Appbar() {
-  let rows = 100;
-  let columns = 26;
-  let dataa = Array(rows)
-    .fill()
-    .map(() =>
-      Array(columns)
-        .fill()
-        .map(() => ({ value: "" }))
-    );
-  const [data, setData] = useState(dataa);
-
   return (
     <>
-      <div className="navbar h-44">
+      <div className="navbar h-40">
         {/* logo */}
         <div className="div1">
           <img
@@ -37,7 +26,7 @@ function Appbar() {
         </div>
 
         {/* tabs */}
-        <div className="div3 flex gap-6">
+        <div class="div3 flex gap-6">
             <div className="flex flex-col h-full mr-8 mt-6">File</div>
             <div className="flex flex-col h-full mr-8 mt-6">Edit</div>
             <div className="flex flex-col h-full mr-8 mt-6">View</div>
@@ -45,20 +34,19 @@ function Appbar() {
         </div>
 
         {/* search */}
-        <div className="div4">
+        <div class="div4">
             <input className="rounded-full h-10 w-[35rem] bg-[#EAF1FF] mt-5 placeholder-center" placeholder="   Search" />
         </div>
 
         {/* tabs */}
-        <div className="div5 flex gap-6">
+        <div class="div5 flex gap-6">
             <div className="flex flex-col h-full mr-6 mt-6">Collaborate</div>
             <div className="flex flex-col h-full mr-6 mt-6">Comments</div>
             <div className="flex flex-col h-full mt-6">Share</div>
         </div>
 
-
         {/* main functions */}
-        <div className="div6">
+        <div class="div6">
 
         </div>
 
@@ -76,8 +64,7 @@ function Appbar() {
       </div>
       </div>
 
-
-      <Spreadsheet className="mt-44" data={data} onChange={setData} />
+      <Grid />
     </>
   );
 }
