@@ -16,3 +16,7 @@
 .div4 { grid-area: 1 / 6 / 2 / 10; }
 .div5 { grid-area: 1 / 10 / 2 / 14; }
 .div6 { grid-area: 2 / 2 / 3 / 14; }
+
+.formula{
+    z-index:1000;
+}
