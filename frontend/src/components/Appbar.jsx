@@ -19,7 +19,7 @@ function Appbar() {
     <>
       <div className="navbar h-44">
         {/* logo */}
-        <div class="div1">
+        <div className="div1">
           <img
             src={smartsheets}
             alt="smartsheets"
@@ -28,7 +28,7 @@ function Appbar() {
         </div>
 
         {/* profile */}
-        <div class="div2">
+        <div className="div2">
           <div className="rounded-full h-16 w-16 bg-[#EAF1FF] flex justify-center mt-10">
             <div className="flex flex-col justify-center h-full text-xl">
               👤
@@ -37,7 +37,7 @@ function Appbar() {
         </div>
 
         {/* tabs */}
-        <div class="div3 flex gap-6">
+        <div className="div3 flex gap-6">
             <div className="flex flex-col h-full mr-8 mt-6">File</div>
             <div className="flex flex-col h-full mr-8 mt-6">Edit</div>
             <div className="flex flex-col h-full mr-8 mt-6">View</div>
@@ -45,12 +45,12 @@ function Appbar() {
         </div>
 
         {/* search */}
-        <div class="div4">
+        <div className="div4">
             <input className="rounded-full h-10 w-[35rem] bg-[#EAF1FF] mt-5 placeholder-center" placeholder="   Search" />
         </div>
 
         {/* tabs */}
-        <div class="div5 flex gap-6">  
+        <div className="div5 flex gap-6">
             <div className="flex flex-col h-full mr-6 mt-6">Collaborate</div>
             <div className="flex flex-col h-full mr-6 mt-6">Comments</div>
             <div className="flex flex-col h-full mt-6">Share</div>
@@ -58,10 +58,10 @@ function Appbar() {
 
 
         {/* main functions */}
-        <div class="div6">
-            
+        <div className="div6">
+
         </div>
-     
+
      {/* formula bar */}
       <div className=" div7 mt-2">
         <div className="bg-[#EAF1FF] h-12 w-screen flex items-center text-[1rem] rounded">
