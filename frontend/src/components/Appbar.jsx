@@ -1,7 +1,6 @@
 import { useState } from "react";
 import "./Appbar.css";
 import smartsheets from "../assets/smartsheets.png";
-import Grid from "./Grid";
 
 function Appbar() {
   return (
@@ -12,7 +11,7 @@ function Appbar() {
           <img
             src={smartsheets}
             alt="smartsheets"
-            className="h-12 w-24 mt-10 ml-8"
+            className="h-16 w-32 mt-10 ml-8"
           />
         </div>
 
@@ -51,8 +50,6 @@ function Appbar() {
         {/* main functions */}
         <div className="div6"></div>
       </div>
-
-      <Grid />
     </>
   );
 }
