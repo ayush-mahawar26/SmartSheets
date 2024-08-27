@@ -1,38 +1,14 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-mongoose.connect("mongodb://localhost:27017/socialCalc");
-
-const userSchema = new mongoose.Schema({
-    username: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true,
-        lowercase: true,
-        minLength: 3,
-        maxLength: 30
-    },
-    password: {
-        type: String,
-        required: true,
-        minLength: 6
-    },
-    firstName: {
-        type: String,
-        required: true,
-        trim: true,
-        maxLength: 50
-    },
-    lastName: {
-        type: String,
-        required: true,
-        trim: true,
-        maxLength: 50
-    }
-});
-
-const User = mongoose.model('User', userSchema);
+const dbConnect = mongoose
+  .connect(
+    "mongodb+srv://ayush123:ayush123@cluster0.kpwm74z.mongodb.net/smartsheet"
+  )
+  .then((val, err) => {
+    if (err) throw err;
+    console.log("Connected to db");
+  });
 
 module.exports = {
-	User,
+  dbConnect,
 };
