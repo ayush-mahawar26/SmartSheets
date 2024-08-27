@@ -26,6 +26,12 @@ const userSchema = new mongoose.Schema({
     trim: true,
     maxLength: 50,
   },
+  sheets: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Sheet",
+    },
+  ],
 });
 
 const User = mongoose.model("User", userSchema);
