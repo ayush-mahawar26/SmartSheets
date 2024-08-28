@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import smartsheets from "../assets/smartsheets.png";
 import { useNavigate } from "react-router-dom";
 import demoPage from "../assets/demoPage.png";
@@ -22,7 +22,7 @@ const LandingPage = () => {
         <button className="bg-blue-500 text-white text-lg py-2 px-6 rounded-lg mb-4 shadow" onClick={handleNewSpreadsheet}>
           New Spreadsheet
         </button>
-        <button className="bg-blue-200 text-black text-lg py-2 px-6 rounded-lg shadow">
+        <button className="bg-blue-200 text-black text-lg py-2 px-14 w-52 rounded-lg shadow">
           Collaborate
         </button>
       </div>

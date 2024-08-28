@@ -10,14 +10,15 @@ const Grid = () => {
     let cells = Array(rows).fill().map(() => Array(columns).fill().map(() => ({ value: "" })));
     const [data, setData] = useState(cells);
 
+    const [FuncText, setFuncText] = useState("");
+
     const handleCellClick = (cell) => {
         if(cell.range === undefined) return;
         console.log(cell);
 		console.log("start: ", cell.range.start.row, cell.range.start.column);
 		console.log(data[cell.range.start.row][cell.range.start.column]);
 
-		// console.log("end: ", cell.range.end.row, cell.range.end.column);
-		// console.log(data[cell.range.end.row][cell.range.end.column]);
+        setFuncText(data[cell.range.start.row][cell.range.start.column].value);
 		
     };
 
@@ -35,8 +36,10 @@ const Grid = () => {
             <div className="ml-12 flex justify-center items-center h-full w-screen rounded-l-full m">
                 fx
                 <input
+                onChange={(e) => setFuncText(e.target.value)}
                 className="ml-8 h-full w-screen bg-[#EAF1FF]"
                 placeholder="   Enter formula here"
+                value={FuncText}
                 />
             </div>
             </div>
