@@ -1,6 +1,6 @@
 import React from 'react'
 import Spreadsheet from "react-spreadsheet";
-import { useState } from "react";
+import { useState, useEffect} from "react";
 import "./Appbar.css";
 
 const Grid = () => {
@@ -11,21 +11,49 @@ const Grid = () => {
     const [data, setData] = useState(cells);
 
     const [FuncText, setFuncText] = useState("");
+    const [formulaBarData, setFormulaBarData] = useState({ rowNum: null, colNum: null, value: "" });
+
 
     const handleCellClick = (cell) => {
         if(cell.range === undefined) return;
-        console.log(cell);
+        // console.log(cell);
 		console.log("start: ", cell.range.start.row, cell.range.start.column);
 		console.log(data[cell.range.start.row][cell.range.start.column]);
 
+        let rowNum = cell.range.start.row;
+        let colNum = cell.range.start.column;
+        let value = data[rowNum][colNum].value;
+
         setFuncText(data[cell.range.start.row][cell.range.start.column].value);
-		
+        setFormulaBarData({ rowNum, colNum, value });
     };
 
     const handleDataChange = (newData) => {
         setData(newData);
     };
 
+    const handleChange = (e) => { 
+        setFuncText(e.target.value);
+    setFormulaBarData({ ...formulaBarData, value: e.target.value });
+  };
+
+
+     useEffect(() => {
+        const { rowNum, colNum, value } = formulaBarData;
+        if (rowNum !== null && colNum !== null) {
+          const updatedData = [...data];
+          updatedData[rowNum][colNum] = { value };
+          setData(updatedData);
+        }
+      }, [formulaBarData]);
+
+      useEffect(() => {
+        const { rowNum, colNum } = formulaBarData;
+        if (rowNum !== null && colNum !== null) {
+          const value = data[rowNum][colNum].value;
+          setFuncText(value);
+        }
+      }, [data]);
 
   return (
     <div>
@@ -36,8 +64,8 @@ const Grid = () => {
             <div className="ml-12 flex justify-center items-center h-full w-screen rounded-l-full m">
                 fx
                 <input
-                onChange={(e) => setFuncText(e.target.value)}
-                className="ml-8 h-full w-screen bg-[#EAF1FF]"
+                onChange={handleChange}
+                className="focus:outline-none ml-8 h-full w-screen bg-[#EAF1FF]"
                 placeholder="   Enter formula here"
                 value={FuncText}
                 />
