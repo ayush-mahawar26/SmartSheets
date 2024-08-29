@@ -1,5 +1,4 @@
 import React from "react";
-import Grid from "../components/Grid";
 import { useNavigate } from "react-router-dom";
 import smartsheets from "../assets/smartsheets.png";
 import "../components/Appbar.css";
@@ -14,8 +13,9 @@ const Sheet = () => {
     navigate("/");
   };
 
+  const [copiedData, setCopiedData] = useState([]);
   const [PrevSelection, setPrevSelection] = useState();
-  const [Coordinate, setCoordinate] = useState("-");
+  const [Coordinate, setCoordinate] = useState("____");
   const [FuncText, setFuncText] = useState("");
   const [formulaBarData, setFormulaBarData] = useState({
     rowNum: null,
@@ -36,7 +36,7 @@ const Sheet = () => {
 
   const handleCellClick = (cell) => {
     if (cell.range === undefined) {
-      setCoordinate("-");
+      setCoordinate("____");
       return;
     }
     setPrevSelection(cell);
@@ -59,9 +59,70 @@ const Sheet = () => {
           (cell.range.end.row + 1)
       );
     }
-
     setFuncText(data[cell.range.start.row][cell.range.start.column].value);
     setFormulaBarData({ rowNum, colNum, value });
+  };
+
+  const handleCopy = () => {
+    const { start, end } = PrevSelection.range;
+    let startRow = start.row;
+    let startCol = start.column;
+    let endRow = end.row;
+    let endCol = end.column;
+
+    let temp = [];
+
+    let cellData = [...data];
+    console.log(startRow, startCol, endRow, endCol);
+    for (let i = startRow; i <= endRow; i++) {
+      let row = [];
+      for (let j = startCol; j <= endCol; j++) {
+        row.push(cellData[i][j]);
+      }
+      temp.push(row);
+    }
+
+    setCopiedData(temp);
+    console.log(temp);
+  };
+
+  const handlePaste = () => {
+    const { start } = PrevSelection.range;
+    let startRow = start.row;
+    let startCol = start.column;
+
+    let newData = [...data];
+
+    for (let i = 0; i < copiedData.length; i++) {
+      for (let j = 0; j < copiedData[i].length; j++) {
+        if (startRow + i < rows && startCol + j < columns) {
+          newData[startRow + i][startCol + j] = copiedData[i][j];
+        }
+      }
+    }
+
+    setData(newData);
+  };
+
+  const handleDelete = () => {
+    const { start, end } = PrevSelection.range;
+    let startRow = start.row;
+    let startCol = start.column;
+    let endRow = end.row;
+    let endCol = end.column;
+
+    let temp = [];
+
+    let cellData = [...data];
+    console.log(startRow, startCol, endRow, endCol);
+    for (let i = startRow; i <= endRow; i++) {
+      for (let j = startCol; j <= endCol; j++) {
+        cellData[i][j] = "";
+      }
+    }
+
+    setCopiedData(temp);
+    console.log(temp);
   };
 
   const handleDataChange = (newData) => {
@@ -71,6 +132,12 @@ const Sheet = () => {
   const handleChange = (e) => {
     setFuncText(e.target.value);
     setFormulaBarData({ ...formulaBarData, value: e.target.value });
+    let rowNum = formulaBarData.rowNum;
+    let colNum = formulaBarData.colNum;
+    let value = e.target.value;
+    const updatedData = [...data];
+    updatedData[rowNum][colNum] = { value };
+    setData(updatedData);
   };
 
   const sortSelectedData = () => {
@@ -79,8 +146,6 @@ const Sheet = () => {
     let startCol = start.column;
     let endRow = end.row;
     let endCol = end.column;
-
-    console.log(startRow, startCol, endRow, endCol);
 
     let temp = [];
 
@@ -91,34 +156,18 @@ const Sheet = () => {
       }
       temp.push(row);
     }
-    console.log(temp);
-    if (temp[0].length > 1 && temp.length == 1) {
-      temp[0].sort((a, b) => parseFloat(a) - parseFloat(b));
-    } else if (temp.length > 1 && temp[0].length == 1) {
-      let temp1 = [];
-      for (let i = 0; i < temp.length; i++) {
-        temp1.push(temp[i][0]);
-      }
-      temp1.sort();
-      for (let i = 0; i < temp1.length; i++) {
-        temp[i][0] = temp1[i];
-      }
-    } else {
-      let temp1 = [];
-      for (let i = 0; i < temp.length; i++) {
-        for (let j = 0; j < temp[0].length; j++) {
-          temp1.push(temp[i][j]);
-        }
-      }
-      temp1.sort((a, b) => parseFloat(a) - parseFloat(b));
-      for (let i = 0; i < temp.length; i++) {
-        for (let j = 0; j < temp[0].length; j++) {
-          temp[i][j] = temp1[i * temp[0].length + j];
-        }
+    let temp1 = [];
+    for (let i = 0; i < temp.length; i++) {
+      for (let j = 0; j < temp[0].length; j++) {
+        temp1.push(temp[i][j]);
       }
     }
-
-    console.log(temp);
+    temp1.sort((a, b) => parseFloat(a) - parseFloat(b));
+    for (let i = 0; i < temp.length; i++) {
+      for (let j = 0; j < temp[0].length; j++) {
+        temp[i][j] = temp1[i * temp[0].length + j];
+      }
+    }
 
     let newData = [...data];
 
@@ -132,41 +181,73 @@ const Sheet = () => {
     console.log(data);
   };
 
-  const HandleUndo = () => {
-    // press ctrl + z to undo
-    const event = new KeyboardEvent("keydown", {
-      key: "z",
-      ctrlKey: true,
-      metaKey: true,
-    });
-    window.dispatchEvent(event);
+  const handleKeyDown = (event) => { 
+    let formulaTillNow = FuncText;
+    formulaTillNow = formulaTillNow + String.fromCharCode(event.keyCode);
+    setFuncText(formulaTillNow);
+   }
+
+  const convertToCSV = (data) => {
+    return data
+      .map((row) => row.map((cell) => cell.value).join(","))
+      .join("\n");
   };
 
-  const HandleRedo = (second) => {
-    third;
+  const downloadCSV = () => {
+    const csvData = convertToCSV(data);
+    const blob = new Blob([csvData], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "spreadsheet.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
+
+  const handleImport = () => { 
+    console.log(data);
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv";
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const contents = e.target.result;
+        const rows = contents.split("\n");
+        let newData = rows.map((row) => row.split(","));
+        newData = newData.map((row) => row.map((cell) => ({ value: cell })));
+        setData(newData);
+        console.log(newData);
+        console.log(data);
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+   }
 
   //whenever there is a change in data, call a use effect to display the updated data
-  useEffect(() => {
-    console.log("updated");
-  }, [data]);
+  // useEffect(() => {
+  //   console.log("updated");
+  // }, [data]);
 
-  useEffect(() => {
-    const { rowNum, colNum, value } = formulaBarData;
-    if (rowNum !== null && colNum !== null) {
-      const updatedData = [...data];
-      updatedData[rowNum][colNum] = { value };
-      setData(updatedData);
-    }
-  }, [formulaBarData]);
+  // useEffect(() => {
+  //   const { rowNum, colNum, value } = formulaBarData;
+  //   if (rowNum !== null && colNum !== null) {
+  //     const updatedData = [...data];
+  //     updatedData[rowNum][colNum] = { value };
+  //     setData(updatedData);
+  //   }
+  // }, [formulaBarData]);
 
-  useEffect(() => {
-    const { rowNum, colNum } = formulaBarData;
-    if (rowNum !== null && colNum !== null) {
-      const value = data[rowNum][colNum].value;
-      setFuncText(value);
-    }
-  }, [data]);
+  // useEffect(() => {
+  //   const { rowNum, colNum } = formulaBarData;
+  //   if (rowNum !== null && colNum !== null) {
+  //     const value = data[rowNum][colNum].value;
+  //     setFuncText(value);
+  //   }
+  // }, [data]);
 
   return (
     <div>
@@ -219,21 +300,39 @@ const Sheet = () => {
         <div className="div6 flex h-14 gap-6">
           <button
             onClick={sortSelectedData}
-            className="border p-4 rounded w-24 bg-[#EAF1FF]"
+            className="hover:bg-blue-100 border p-4 rounded w-24 bg-[#EAF1FF]"
           >
             Sort
           </button>
           <button
-            onClick={HandleUndo}
-            className="border rounded p-4 bg-[#EAF1FF] w-24"
+            onClick={handleCopy}
+            className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-24"
           >
-            Undo
+            Copy
           </button>
           <button
-            onClick={HandleRedo}
-            className="border rounded p-4 bg-[#EAF1FF] w-24"
+            onClickCapture={handlePaste}
+            className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-24"
           >
-            Redo
+            Paste
+          </button>
+          <button
+            onClick={handleDelete}
+            className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-24"
+          >
+            Delete
+          </button>
+          <button
+            onClick={downloadCSV}
+            className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-32"
+          >
+            Download
+          </button>
+          <button
+            onClick={handleImport}
+            className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-32"
+          >
+            Import
           </button>
         </div>
       </div>
@@ -265,6 +364,7 @@ const Sheet = () => {
           data={data}
           onChange={handleDataChange}
           onSelect={(selected) => handleCellClick(selected)}
+          onKeyDown={handleKeyDown}
         />
       </div>
     </div>
