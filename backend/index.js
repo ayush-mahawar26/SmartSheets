@@ -43,8 +43,7 @@ io.on("connection", (socket) => {
 
   // User edits a cell
   socket.on("editCell", async ({ sheetId, cell, value }) => {
-    // Emit the update to all clients connected to this sheet
-    io.to(sheetId).emit("cellUpdated", { cell, value });
+    io.broadcast.to(sheetId).emit("cellUpdated", { cell, value });
     try {
       await Sheets.updateOne(
         { sheetid: sheetId, "data.row": cell.row, "data.col": cell.col },
@@ -60,6 +59,17 @@ io.on("connection", (socket) => {
     } catch (error) {
       console.error("Error updating cell in MongoDB:", error);
     }
+  });
+
+  socket.on("save-document", async ({ sheetId, data }) => {
+    await Sheets.updateOne(
+      { sheetid: sheetId },
+      {
+        $set: {
+          data: data,
+        },
+      }
+    );
   });
 });
 
