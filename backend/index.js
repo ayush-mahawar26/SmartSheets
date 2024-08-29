@@ -36,6 +36,7 @@ io.on("connection", (socket) => {
   console.log("socket connected !! ", socket.id);
 
   // User joins a specific sheet
+  // make the collaborator join the sheet by (sheetId)
   socket.on("joinSheet", (sheetId) => {
     socket.join(sheetId);
     console.log(`User ${socket.id} joined sheet ${sheetId}`);
