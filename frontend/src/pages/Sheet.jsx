@@ -13,6 +13,8 @@ const Sheet = () => {
     navigate("/");
   };
 
+  const [Tab, setTab] = useState("Edit");
+  const [FileName, setFileName] = useState("Untitled Spreadsheet");
   const [copiedData, setCopiedData] = useState([]);
   const [PrevSelection, setPrevSelection] = useState();
   const [Coordinate, setCoordinate] = useState("____");
@@ -22,6 +24,8 @@ const Sheet = () => {
     colNum: null,
     value: "",
   });
+  const [History, setHistory] = useState([]);
+  const [Current, setCurrent] = useState(0);
 
   let rows = 100;
   let columns = 26;
@@ -140,6 +144,22 @@ const Sheet = () => {
     setData(updatedData);
   };
 
+  const handleUndo = () => { 
+    if (Current > 0) {
+      let hist = [...History];
+      setData(hist[Current - 1]);
+      setCurrent(Current - 1);
+    }
+   }
+
+   const handleRedo = () => {
+    if (Current < History.length - 1) {
+      let hist = [...History];
+      setData(hist[Current + 1]);
+      setCurrent(Current + 1);
+    }
+   }
+
   const sortSelectedData = () => {
     const { start, end } = PrevSelection.range;
     let startRow = start.row;
@@ -181,11 +201,11 @@ const Sheet = () => {
     console.log(data);
   };
 
-  const handleKeyDown = (event) => { 
+  const handleKeyDown = (event) => {
     let formulaTillNow = FuncText;
     formulaTillNow = formulaTillNow + String.fromCharCode(event.keyCode);
     setFuncText(formulaTillNow);
-   }
+  };
 
   const convertToCSV = (data) => {
     return data
@@ -205,7 +225,27 @@ const Sheet = () => {
     document.body.removeChild(a);
   };
 
-  const handleImport = () => { 
+  const handleRename = () => {
+    const newName = prompt("Enter New File Name");
+    if (newName) {
+      setFileName(newName);
+    }
+  };
+
+  const handleNewFile = () => {
+    let rows = 100;
+    let columns = 26;
+    let cells = Array(rows)
+      .fill()
+      .map(() =>
+        Array(columns)
+          .fill()
+          .map(() => ({ value: "" }))
+      );
+    setData(cells);
+  };
+
+  const handleImport = () => {
     console.log(data);
     const input = document.createElement("input");
     input.type = "file";
@@ -225,21 +265,23 @@ const Sheet = () => {
       reader.readAsText(file);
     };
     input.click();
-   }
+  };
 
   //whenever there is a change in data, call a use effect to display the updated data
   // useEffect(() => {
   //   console.log("updated");
   // }, [data]);
 
-  // useEffect(() => {
-  //   const { rowNum, colNum, value } = formulaBarData;
-  //   if (rowNum !== null && colNum !== null) {
-  //     const updatedData = [...data];
-  //     updatedData[rowNum][colNum] = { value };
-  //     setData(updatedData);
-  //   }
-  // }, [formulaBarData]);
+  useEffect(() => {
+    const { rowNum, colNum, value } = formulaBarData;
+    if (rowNum !== null && colNum !== null) {
+      const updatedData = [...data];
+      updatedData[rowNum][colNum] = { value };
+      setData(updatedData);
+      setHistory([...History, updatedData]);
+      setCurrent(Current + 1);
+    }
+  }, [formulaBarData]);
 
   // useEffect(() => {
   //   const { rowNum, colNum } = formulaBarData;
@@ -273,68 +315,137 @@ const Sheet = () => {
 
         {/* tabs */}
         <div className="div3 flex gap-6">
-          <button className="flex flex-col h-full mr-8 mt-6">File</button>
-          <button className="flex flex-col h-full mr-8 mt-6">Edit</button>
-          <button className="flex flex-col h-full mr-8 mt-6">View</button>
-          <button className="flex flex-col h-full mr-8 mt-6">Insert</button>
+          <button
+            onClick={(e) => {
+              setTab("File");
+            }}
+            className={`${Tab === 'File' ? 'font-bold text-blue-500' : ''} flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
+          >
+            File
+          </button>
+          <button
+            onClick={(e) => {
+              setTab("Edit");
+            }}
+            className={`${Tab === 'Edit' ? 'font-bold text-blue-500' : ''} flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
+          >
+            Edit
+          </button>
+          <button
+            onClick={(e) => {
+              setTab("View");
+            }}
+            className={`${Tab === 'View' ? 'font-bold text-blue-500' : ''} flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
+          >
+            View
+          </button>
+          <button
+            onClick={(e) => {
+              setTab("Insert");
+            }}
+            className={`${Tab === 'Insert' ? 'font-bold text-blue-500' : ''} flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
+          >
+            Insert
+          </button>
         </div>
 
         {/* search */}
         <div className="div4">
           <input
-            className="rounded-full h-10 w-[35rem] bg-[#EAF1FF] mt-5 placeholder-center"
-            placeholder="   Search"
+            className="focus:caret-transparent focus:outline-none rounded-full h-10 w-[35rem] bg-[#EAF1FF] text-[rgba(0,0,0,0.5)] mt-5 text-center placeholder-center"
+            value={FileName}
           />
         </div>
 
         {/* tabs */}
         <div className="div5 flex gap-6">
-          <button className="flex flex-col h-full mr-6 mt-6">
+          <button onClick={(e) => {
+              setTab("Collaborate");
+            }}
+            className={`${Tab === 'Collaborate' ? 'font-bold text-blue-500' : ''} flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}>
             Collaborate
           </button>
-          <button className="flex flex-col h-full mr-6 mt-6">Comments</button>
-          <button className="flex flex-col h-full mt-6">Share</button>
+          <button onClick={(e) => {
+              setTab("Comments");
+            }}
+            className={`${Tab === 'Comments' ? 'font-bold text-blue-500' : ''} flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}>Comments</button>
+          <button onClick={(e) => {
+              setTab("Share");
+            }}
+            className={`${Tab === 'Share' ? 'font-bold text-blue-500' : ''} flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}>Share</button>
         </div>
 
         {/* main functions */}
-        <div className="div6 flex h-14 gap-6">
-          <button
-            onClick={sortSelectedData}
-            className="hover:bg-blue-100 border p-4 rounded w-24 bg-[#EAF1FF]"
-          >
-            Sort
-          </button>
-          <button
-            onClick={handleCopy}
-            className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-24"
-          >
-            Copy
-          </button>
-          <button
-            onClickCapture={handlePaste}
-            className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-24"
-          >
-            Paste
-          </button>
-          <button
-            onClick={handleDelete}
-            className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-24"
-          >
-            Delete
-          </button>
-          <button
-            onClick={downloadCSV}
-            className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-32"
-          >
-            Download
-          </button>
-          <button
-            onClick={handleImport}
-            className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-32"
-          >
-            Import
-          </button>
-        </div>
+
+        {Tab === "File" && (
+          <div className="div6 flex h-14 gap-6">
+            <button
+              onClick={handleNewFile}
+              className="hover:bg-blue-100 border p-4 rounded w-32 bg-[#EAF1FF]"
+            >
+              New File
+            </button>
+            <button
+              onClick={downloadCSV}
+              className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-32"
+            >
+              Download
+            </button>
+            <button
+              onClick={handleImport}
+              className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-32"
+            >
+              Import CSV
+            </button>
+            <button
+              onClick={handleRename}
+              className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-32"
+            >
+              Rename
+            </button>
+          </div>
+        )}
+
+        {Tab === "Edit" && (
+          <div className="div6 flex h-14 gap-6">
+            <button
+              onClick={handleUndo}
+              className="hover:bg-blue-100 border p-4 rounded w-32 bg-[#EAF1FF]"
+            >
+              Undo
+            </button>
+            <button
+              onClick={handleRedo}
+              className="hover:bg-blue-100 border p-4 rounded w-32 bg-[#EAF1FF]"
+            >
+              Redo
+            </button>
+            <button
+              onClick={sortSelectedData}
+              className="hover:bg-blue-100 border p-4 rounded w-32 bg-[#EAF1FF]"
+            >
+              Sort
+            </button>
+            <button
+              onClick={handleCopy}
+              className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-32"
+            >
+              Copy
+            </button>
+            <button
+              onClickCapture={handlePaste}
+              className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-32"
+            >
+              Paste
+            </button>
+            <button
+              onClick={handleDelete}
+              className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-32"
+            >
+              Delete
+            </button>
+          </div>
+        )}
       </div>
 
       <div>
@@ -343,7 +454,7 @@ const Sheet = () => {
           <div className="formula fixed bg-[#EAF1FF] h-12 w-screen flex items-center text-[1rem] rounded">
             <input
               value={Coordinate}
-              className="focus:outline-none ml-8 h-full w-16 bg-[#EAF1FF] shadow-[rgba(0,0,0,0.1)_1px_0px_0px_0px]"
+              className="focus:caret-transparent focus:outline-none ml-8 h-full w-16 bg-[#EAF1FF] shadow-[rgba(0,0,0,0.1)_1px_0px_0px_0px]"
             ></input>
             <div
               value={Coordinate}
