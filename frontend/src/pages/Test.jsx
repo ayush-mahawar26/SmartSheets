@@ -10,6 +10,7 @@ import { HotTable } from "@handsontable/react";
 import io from "socket.io-client";
 import { HyperFormula } from 'hyperformula';
 import { useParams } from 'react-router-dom';
+import { v4 as uuid } from 'uuid';
 
 
 const Test = () => {
@@ -28,144 +29,138 @@ const Test = () => {
 
   const [Tab, setTab] = useState("Edit");
   const [FileName, setFileName] = useState("Untitled Spreadsheet");
-  const [copiedData, setCopiedData] = useState([]);
-  const [PrevSelection, setPrevSelection] = useState();
+  const [PrevSelection, setPrevSelection] = useState({ range: { start: { row: 0, col: 0 }, end: { row: 0, col: 0 } } });
   const [Coordinate, setCoordinate] = useState("____");
   const [FuncText, setFuncText] = useState("");
-  const [formulaBarData, setFormulaBarData] = useState({
-    rowNum: null,
-    colNum: null,
-    value: "",
-  });
-  const [History, setHistory] = useState([]);
-  const [Current, setCurrent] = useState(0);
+  const [CopiedData, setCopiedData] = useState([]);
 
-  // ------------------------> Edit Functions <------------------------
+  // -------------------------------> Edit Functions <-------------------------------
+
   const handleUndo = () => {
-    if (hotRef.current) {
-      hotRef.current.hotInstance.undo();
-    } else {
-      console.error('Handsontable instance is not available');
-    }
-  };
-
-  const handleRedo = () => {
-    if (Current < History.length - 1) {
-      let hist = [...History];
-      setData(hist[Current + 1]);
-      setCurrent(Current + 1);
-    }
-  };
+    let hotInstance = hotRef.current.hotInstance;
+    hotInstance.undo();
+  }
 
   const sortSelectedData = () => {
-    const { start, end } = PrevSelection.range;
-    let startRow = start.row;
-    let startCol = start.column;
-    let endRow = end.row;
-    let endCol = end.column;
+    let hotInstance = hotRef.current.hotInstance;
+    let selected = hotInstance.getSelected();
+    let startRow = selected[0][0];
+    let startCol = selected[0][1];
+    let endRow = selected[0][2];
+    let endCol = selected[0][3];
+    console.log(startRow, startCol, endRow, endCol);
 
     let temp = [];
-
-    for (let i = startRow; i <= endRow; i++) {
+    for(let i=startRow; i<=endRow; i++){
       let row = [];
-      for (let j = startCol; j <= endCol; j++) {
-        row.push(data[i][j].value);
+      for(let j=startCol; j<=endCol; j++){
+        row.push(Data[i][j]);
       }
       temp.push(row);
     }
-    let temp1 = [];
-    for (let i = 0; i < temp.length; i++) {
-      for (let j = 0; j < temp[0].length; j++) {
-        temp1.push(temp[i][j]);
-      }
-    }
-    temp1.sort((a, b) => parseFloat(a) - parseFloat(b));
-    for (let i = 0; i < temp.length; i++) {
-      for (let j = 0; j < temp[0].length; j++) {
-        temp[i][j] = temp1[i * temp[0].length + j];
-      }
-    }
 
-    let newData = [...data];
+    let array = [];
 
-    for (let i = startRow; i <= endRow; i++) {
-      for (let j = startCol; j <= endCol; j++) {
-        newData[i][j].value = temp[i - startRow][j - startCol];
+    if(startRow ==endRow){
+      temp[0].sort();
+      array = temp[0];
+    }
+    else if(startCol == endCol){
+      let temp1 = [];
+      for(let i=0; i<temp.length; i++){
+        temp1.push(temp[i][0]);
       }
+      temp1.sort();
+      array = temp1;
     }
 
-    setData(newData);
+    console.log(temp);
+
+    let idx_i = 0;
+    let idx_j = 0;
+    for(let i=startRow; i<=endRow; i++){
+      for(let j=startCol; j<=endCol; j++){
+        hotInstance.setDataAtCell(i, j, array[idx_j]);
+        idx_j++;
+      }
+      idx_i++;
+    }
+
+
+   
   };
 
-  const handleCopy = () => {
-    const { start, end } = PrevSelection.range;
-    let startRow = start.row;
-    let startCol = start.column;
-    let endRow = end.row;
-    let endCol = end.column;
+  const handleCopy = async () => {
+    const hotInstance = hotRef.current.hotInstance;
+    hotInstance.getPlugin('CopyPaste').copy(); // Trigger the copy action
 
-    let temp = [];
-
-    let cellData = [...data];
-    for (let i = startRow; i <= endRow; i++) {
-      let row = [];
-      for (let j = startCol; j <= endCol; j++) {
-        row.push(cellData[i][j]);
-      }
-      temp.push(row);
-    }
-
-    setCopiedData(temp);
+    const text = await navigator.clipboard.readText();
+    setCopiedData(text.split('\n').map(row => row.split('\t')));
+    console.log(CopiedData);
   };
 
   const handlePaste = () => {
-    const { start } = PrevSelection.range;
-    let startRow = start.row;
-    let startCol = start.column;
+    let hotInstance = hotRef.current.hotInstance;
+    let selected = hotInstance.getSelected();
+    let startRow = selected[0][0];
+    let startCol = selected[0][1];
+    let endRow = selected[0][2];
+    let endCol = selected[0][3];
 
-    let newData = [...data];
+    console.log(startRow, startCol, endRow, endCol);
+    console.log(CopiedData);
 
-    for (let i = 0; i < copiedData.length; i++) {
-      for (let j = 0; j < copiedData[i].length; j++) {
-        if (startRow + i < rows && startCol + j < columns) {
-          newData[startRow + i][startCol + j] = copiedData[i][j];
-        }
+    let idx_i = startRow;
+    let idx_j = startCol;
+
+    for(let i=0; i<=CopiedData.length; i++){
+      for(let j=0; j<=CopiedData[0].length; j++){
+        hotInstance.setDataAtCell(idx_i, idx_j, CopiedData[i][j]);
+        idx_j++;
       }
+      idx_i++;
     }
 
-    setData(newData);
   };
+
   const { sheetId } = useParams();
 
   const handleDelete = () => {
-    const { start, end } = PrevSelection.range;
-    let startRow = start.row;
-    let startCol = start.column;
-    let endRow = end.row;
-    let endCol = end.column;
+    let hotInstance = hotRef.current.hotInstance;
+    let selected = hotInstance.getSelected();
+    
+    let startRow = selected[0][0];
+    let startCol = selected[0][1];
+    let endRow = selected[0][2];
+    let endCol = selected[0][3];
 
-    let temp = [];
+    console.log(startRow, startCol, endRow, endCol);
 
-    let cellData = [...data];
-    for (let i = startRow; i <= endRow; i++) {
-      for (let j = startCol; j <= endCol; j++) {
-        cellData[i][j] = "";
+    for(let i=startRow; i<=endRow; i++){
+      for(let j=startCol; j<=endCol; j++){
+        hotInstance.setDataAtCell(i, j, "");
       }
     }
 
-    setCopiedData(temp);
+    // hotInstance.render();
   };
 
   //------------------------------------> File Functions <-----------------------------------
 
   const convertToCSV = (data) => {
     return data
-      .map((row) => row.map((cell) => cell.value).join(","))
+      .map((row) => {
+        return row.map((cell) => {
+          return cell;
+        });
+      }
+      )
+      .map((row) => row.join(","))
       .join("\n");
   };
 
   const downloadCSV = () => {
-    const csvData = convertToCSV(data);
+    const csvData = convertToCSV(Data);
     const blob = new Blob([csvData], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -184,8 +179,8 @@ const Test = () => {
   };
 
   const handleNewFile = () => {
-    const id = uuidv4();
-    navigate(`/sheet/${id}`);
+    const id = uuid();
+    navigate(`/testing/${id}`);
   };
 
   const handleImport = () => {
@@ -198,8 +193,11 @@ const Test = () => {
       reader.onload = (e) => {
         const contents = e.target.result;
         const rows = contents.split("\n");
-        let newData = rows.map((row) => row.split(","));
-        newData = newData.map((row) => row.map((cell) => ({ value: cell })));
+        const newData = [];
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i].split(",");
+          newData.push(row);
+        }
         setData(newData);
       };
 
@@ -208,14 +206,13 @@ const Test = () => {
     input.click();
   };
 
-  registerAllModules();
-
   const [Data, setData] = useState([]);
   const [socket, setSocket] = useState(null);
   // const sheetId = 4;
 
   const handleAfterChange = (changes) => {
     if (changes) {
+      console.log("updated");
       const newData = [...Data];
       changes.forEach(([row, col, oldValue, newValue]) => {
         if (newValue !== oldValue) {
@@ -226,7 +223,22 @@ const Test = () => {
       socket.emit("save-document", { sheetId, data: newData });
     }
   };
+
+  const handleSelection = (r, c, r2, c2) => {
+    const hotInstance = hotRef.current.hotInstance;
+    const cellData = hotInstance.getDataAtCell(r, c);
+    if(r==r2 && c==c2){
+      setCoordinate(`${String.fromCharCode(65 + c)}${r + 1}`);
+    }
+    else{
+      setCoordinate(`${String.fromCharCode(65 + c)}${r + 1}:${String.fromCharCode(65 + c2)}${r2 + 1}`);
+    }
+    setFuncText(cellData);
+    setPrevSelection({ range: { start: { row: r, col: c }, end: { row: r2, col: c2 } } });
+  };
+
   useEffect(() => {
+    registerAllModules();
     let rows = 100;
     let columns = 50;
     let data = [];
@@ -239,7 +251,6 @@ const Test = () => {
     }
     setData(data);
   }, []);
-
 
   useEffect(() => {
     const s = io("http://localhost:3000");
@@ -333,6 +344,8 @@ const Test = () => {
           <input
             className="focus:caret-transparent focus:outline-none rounded-full h-10 w-[35rem] bg-[#EAF1FF] text-[rgba(0,0,0,0.5)] mt-5 text-center placeholder-center"
             value={FileName}
+            onClickCapture={handleRename}
+            readOnly={true}
           />
         </div>
 
@@ -410,12 +423,6 @@ const Test = () => {
               Undo
             </button>
             <button
-              onClick={handleRedo}
-              className="hover:bg-blue-100 border p-4 rounded w-32 bg-[#EAF1FF]"
-            >
-              Redo
-            </button>
-            <button
               onClick={sortSelectedData}
               className="hover:bg-blue-100 border p-4 rounded w-32 bg-[#EAF1FF]"
             >
@@ -462,6 +469,9 @@ const Test = () => {
                 className="focus:outline-none ml-6 h-full w-screen bg-[#EAF1FF]"
                 placeholder="Enter formula here"
                 value={FuncText}
+                onChange={(e) => {
+                  setFuncText(e.target.value);
+                }}
               />
             </div>
           </div>
@@ -470,9 +480,9 @@ const Test = () => {
       <HotTable className="mt-48"
         settings={
           {
-            ref: hotRef,
             contextMenu: true,
             afterChange: handleAfterChange,
+            afterSelectionEnd: handleSelection,
             data: Data,
             rowHeaders: true,
             colHeaders: true,
@@ -486,12 +496,20 @@ const Test = () => {
             rowHeights: 30,
             colWidths: 100,
             copyPaste: true,
+            undo: true,
+            outsideClickDeselects: false,
+            afterSetDataAtCell: (changes) => {
+              console.log("here", changes);
+            }
+            
         }}
         formulas={
           {
             engine: hyperformulaInstance,
           }
         }
+        ref={hotRef}
+        selectionMode="multiple"
       />
     </div>
   );
