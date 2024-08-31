@@ -5,6 +5,7 @@ import Signin from './pages/Signin'
 import Signup from './pages/Signup'
 import LandingPage from './pages/LandingPage'
 // import Sheet from './pages/Sheet'
+import CollaboratePage from './components/CollaboratePage'
 import Test from './pages/Test'
 import ProtectedRoute from './components/ProtectedRoute'
 import {v4 as uuid} from 'uuid'
@@ -21,6 +22,7 @@ function App() {
         {/* <Route path="/sheet" element={<Sheet />} /> */}
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
+        <Route path="/collaborate" element={<CollaboratePage />} />
         <Route
             path="/testing/:sheetId"
             element={

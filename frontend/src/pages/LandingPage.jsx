@@ -34,7 +34,6 @@ const LandingPage = () => {
           console.error('Error fetching user details:', error);
         });
     }
-
     // Fetch sheets data
     fetch('http://localhost:3000/sheet/all', {
       method: 'GET',
@@ -64,22 +63,48 @@ const LandingPage = () => {
     navigate(`/testing/${sheetId}`);
   };
 
+  const handleCollaborateClick = () => {
+    navigate('/collaborate');
+  };
+
+  const handleSignIn = () => {
+    navigate('/signin');
+  };
+
+  const handleSignOut = () => {
+    localStorage.removeItem('token'); // Remove the token from local storage
+    setIsLoggedIn(false);
+    setUserDetails(null);
+    navigate('/signin'); // Redirect to the login page
+  };
+
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
-      <div className="w-1/3 bg-[#EAF1FF] flex flex-col items-center justify-center fixed top-0 left-0 h-full shadow-lg">
-        <div className="mb-8">
-          <img src={smartsheets} alt="Smartsheets" className="w-80 mt-8" />
-        </div>
+      <div className="w-1/3 bg-[#EAF1FF] flex flex-col items-center justify-center fixed top-0 left-0 h-full shadow-lg p-6">
+        <img src={smartsheets} alt="Smartsheets" className="w-80 mb-8" />
         <h2 className="text-xl text-gray-800 mb-6">
           {userDetails ? `Welcome back, ${capitalizeFirstLetter(userDetails.firstName)}!` : 'Welcome back!'}
         </h2>
-        <button className="bg-blue-500 text-white text-lg py-2 px-6 rounded-lg mb-4 shadow" onClick={handleNewSpreadsheet}>
-          New Spreadsheet
-        </button>
-        <button className="bg-blue-200 text-black text-lg py-2 px-14 w-52 rounded-lg shadow">
-          Collaborate
-        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <button className="bg-blue-500 text-white text-lg py-2 px-6 rounded-lg shadow" onClick={handleNewSpreadsheet}>
+            New Spreadsheet
+          </button>
+          <button className="bg-blue-200 text-black text-lg py-2 px-14 w-52 rounded-lg shadow" onClick={handleCollaborateClick}>
+            Collaborate
+          </button>
+
+          {!isLoggedIn ? (
+            <button className="bg-green-500 text-white text-lg py-2 px-14 w-52 rounded-lg shadow" onClick={handleSignIn}>
+              Sign In
+            </button>
+          ) : (
+            <button className="bg-red-500 text-white text-lg py-2 px-14 w-52 rounded-lg shadow" onClick={handleSignOut}>
+              Sign Out
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main Content */}
@@ -93,7 +118,7 @@ const LandingPage = () => {
               title={sheet.sheetName}
               lastModified={new Date(sheet.updatedAt).toLocaleDateString()}
               image={demoPage}
-              onClick={() => handleFileClick(sheet.sheetid)} // Pass the sheetId to the click handler
+              onClick={() => handleFileClick(sheet.sheetid)}
             />
           ))}
         </div>

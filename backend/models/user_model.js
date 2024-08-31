@@ -3,28 +3,28 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema({
   useremail: {
     type: String,
-    required: true,
+    required: [true, "Email is required"],
     unique: true,
     trim: true,
     lowercase: true,
-    minLength: 3,
+    minlength: [3, "Email must be at least 3 characters long"],
   },
   password: {
     type: String,
-    required: true,
-    minLength: 6,
+    required: [true, "Password is required"],
+    minlength: [6, "Password must be at least 6 characters long"],
   },
   firstName: {
     type: String,
-    required: true,
+    required: [true, "First name is required"],
     trim: true,
-    maxLength: 50,
+    maxlength: [50, "First name cannot exceed 50 characters"],
   },
   lastName: {
     type: String,
-    required: true,
+    required: [true, "Last name is required"],
     trim: true,
-    maxLength: 50,
+    maxlength: [50, "Last name cannot exceed 50 characters"],
   },
   sheets: [
     {

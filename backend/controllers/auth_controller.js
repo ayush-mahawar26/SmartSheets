@@ -2,6 +2,7 @@ const zod = require("zod");
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const { User } = require("../models/user_model.js");
+const {authMiddleWare} = require("../middleware/auth_middleware.js");
 
 // Route for user
 const userRoute = express.Router();
@@ -18,61 +19,34 @@ const signinBody = zod.object({
   password: zod.string(),
 });
 
-userRoute.post("/signup", async (req, res) => {
-  const { success } = signupBody.safeParse(req.body);
-  console.log(req.body);
-  if (!success) {
-    return res.status(411).json({
-      message: "Incorrect inputs",
+userRoute.get("/me", authMiddleWare, async (req, res) => {
+  try{
+    const user = await User.findById(req.userid);
+    if(!user) {
+      return res.status(411).json({
+        message: "User not found"
+      });
+    }
+    res.json(user);
+  }
+  catch(err){
+    res.status(411).json({
+      message: "Error while fetching user"
     });
   }
-  const existingUser = await User.findOne({
-    useremail: req.body.useremail,
-  });
-
-  if (existingUser) {
-    return res.status(411).json({
-      message: "Email already taken",
-    });
-  }
-
-  const user = await User.create({
-    useremail: req.body.useremail,
-    password: req.body.password,
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-  });
-  const userId = user._id;
-
-  const token = jwt.sign(
-    {
-      userId,
-      email: req.body.useremail,
-    },
-    process.env.JWT_SECRET
-  );
-
-  res.json({
-    message: "User created successfully",
-    token: token,
-  });
 });
 
-userRoute.post("/signin", async (req, res) => {
-  const { success } = signinBody.safeParse(req.body);
-  // console.log(req.body)
-  if (!success) {
-    return res.status(411).json({
-      message: "Incorrect inputs",
+userRoute.post("/signup", async (req, res) => {
+  try {
+    const user = new User({
+      useremail: req.body.useremail,
+      password: req.body.password,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
     });
-  }
 
-  const user = await User.findOne({
-    useremail: req.body.useremail,
-    password: req.body.password,
-  });
+    await user.save();
 
-  if (user) {
     const token = jwt.sign(
       {
         userId: user._id,
@@ -82,14 +56,72 @@ userRoute.post("/signin", async (req, res) => {
     );
 
     res.json({
+      message: "User created successfully",
       token: token,
     });
-    return;
+  } catch (error) {
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(411).json({
+        message: "Validation failed",
+        errors: errors
+      });
+    }
+
+    // Handle unique constraint error
+    if (error.code === 11000) {
+      return res.status(411).json({
+        message: "Email already taken",
+      });
+    }
+
+    // Handle other errors
+    return res.status(500).json({
+      message: "Server error",
+    });
   }
-  res.status(411).json({
-    message: "Error while logging in",
+});
+
+
+userRoute.post("/signin", async (req, res) => {
+  const { success } = signinBody.safeParse(req.body);
+  if (!success) {
+    return res.status(411).json({
+      message: "Please provide a valid email and password.",
+    });
+  }
+
+  const user = await User.findOne({
+    useremail: req.body.useremail,
+  });
+
+  if (!user) {
+    return res.status(411).json({
+      message: "Email not available.",
+    });
+  }
+
+  const isPasswordCorrect = user.password === req.body.password;
+  if (!isPasswordCorrect) {
+    return res.status(411).json({
+      message: "Incorrect password.",
+    });
+  }
+
+  const token = jwt.sign(
+    {
+      userId: user._id,
+      email: req.body.useremail,
+    },
+    process.env.JWT_SECRET
+  );
+
+  res.json({
+    token: token,
   });
 });
+
 
 module.exports = {
   userRoute,
