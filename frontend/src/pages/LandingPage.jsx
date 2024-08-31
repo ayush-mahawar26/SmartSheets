@@ -111,17 +111,22 @@ const LandingPage = () => {
       <div className="flex-1 p-10 bg-[#F9FBFD] ml-[33%] overflow-y-auto">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6">Existing Files</h2>
 
-        <div className="grid grid-cols-1 gap-6">
-          {sheets.map(sheet => (
-            <FileCard
-              key={sheet._id}
-              title={sheet.sheetName}
-              lastModified={new Date(sheet.updatedAt).toLocaleDateString()}
-              image={demoPage}
-              onClick={() => handleFileClick(sheet.sheetid)}
-            />
-          ))}
-        </div>
+        {sheets.length === 0 ? (
+          // <p className="text-gray-600">No files available</p>
+          <p className="text-gray-600 text-2xl text-center mt-20">No files available</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-6">
+            {sheets.map(sheet => (
+              <FileCard
+                key={sheet._id}
+                title={sheet.sheetName}
+                lastModified={new Date(sheet.updatedAt).toLocaleDateString()}
+                image={demoPage}
+                onClick={() => handleFileClick(sheet.sheetid)}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
