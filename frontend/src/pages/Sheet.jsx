@@ -1,48 +1,80 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import smartsheets from "../assets/smartsheets.png";
-import func from "../assets/function.png";
 import "../components/Appbar.css";
-import { useEffect, useState, useRef, useCallback } from "react";
-import "handsontable/dist/handsontable.full.min.css";
-import { registerAllModules } from "handsontable/registry";
-import { HotTable } from "@handsontable/react";
+import { useState, useEffect, useCallback } from "react";
+import Spreadsheet from "react-spreadsheet";
+import func from "../assets/function.png";
 import io from "socket.io-client";
-import { HyperFormula } from 'hyperformula';
+import { v4 as uuidv4 } from "uuid";
+import { debounce } from "lodash";
+import 'handsontable/dist/handsontable.full.min.css';
+import Handsontable from 'handsontable/base';
+import { registerAllModules } from 'handsontable/registry';
+import { HotTable } from '@handsontable/react';
 
-const Test = () => {
+const Sheet = () => {
+
+  // --------------------------------> Navigation <-----------------------------------
   const navigate = useNavigate();
+  const { sheetIdd } = useParams();  
 
   const handleHome = () => {
     navigate("/");
   };
 
-  const hyperformulaInstance = HyperFormula.buildEmpty({
-    licenseKey: 'internal-use-in-handsontable',
-  });
+  registerAllModules();
 
-  const hotRef = useRef(null);
-
+  // -----------------------------------> States <------------------------------------
   const [Tab, setTab] = useState("Edit");
   const [FileName, setFileName] = useState("Untitled Spreadsheet");
   const [copiedData, setCopiedData] = useState([]);
   const [PrevSelection, setPrevSelection] = useState();
   const [Coordinate, setCoordinate] = useState("____");
   const [FuncText, setFuncText] = useState("");
-  const [formulaBarData, setFormulaBarData] = useState({
-    rowNum: null,
-    colNum: null,
-    value: "",
-  });
+  const [socket, setSocket] = useState();
+  const [formulaBarData, setFormulaBarData] = useState({rowNum: null, colNum: null, value: ""});
   const [History, setHistory] = useState([]);
   const [Current, setCurrent] = useState(0);
+  const [sheetId, setSheetId] = useState("");
+  const [data, setData] = useState([]);
 
-  // ------------------------> Edit Functions <------------------------
-  const handleUndo = () => {
-    if (hotRef.current) {
-      hotRef.current.hotInstance.undo();
+  const handleCellClick = (cell) => {
+    if (cell.range === undefined) {
+      setCoordinate("____");
+      return;
+    }
+    setPrevSelection(cell);
+
+    let rowNum = cell.range.start.row;
+    let colNum = cell.range.start.column;
+    let value = data[rowNum][colNum].value;
+
+    if (
+      cell.range.start.row == cell.range.end.row &&
+      cell.range.start.column == cell.range.end.column
+    ) {
+      setCoordinate(String.fromCharCode(65 + colNum) + (rowNum + 1));
     } else {
-      console.error('Handsontable instance is not available');
+      setCoordinate(
+        String.fromCharCode(65 + cell.range.start.column) +
+          (cell.range.start.row + 1) +
+          ":" +
+          String.fromCharCode(65 + cell.range.end.column) +
+          (cell.range.end.row + 1)
+      );
+    }
+    setFuncText(data[cell.range.start.row][cell.range.start.column].value);
+    setFormulaBarData({ rowNum, colNum, value });
+  };
+
+
+  // ----------------------------------> Edit Functions <-----------------------------------
+  const handleUndo = () => {
+    if (Current > 0) {
+      let hist = [...History];
+      setData(hist[Current - 1]);
+      setCurrent(Current - 1);
     }
   };
 
@@ -203,51 +235,100 @@ const Test = () => {
     input.click();
   };
 
-  registerAllModules();
 
-  const [Data, setData] = useState([]);
-  const [socket, setSocket] = useState(null);
-  const sheetId = 4;
+  // ------------------------------> Change Handler Functions <-----------------------------------
 
-  const handleAfterChange = (changes) => {
-    if (changes) {
-      const newData = [...Data];
-      changes.forEach(([row, col, oldValue, newValue]) => {
-        if (newValue !== oldValue) {
-          newData[row][col] = newValue;
-        }
-      });
-      setData(newData);
-      socket.emit("save-document", { sheetId, data: newData });
-    }
+
+    // const handleDataChange = useCallback(
+    //   debounce((newData) => {
+    //     console.log("Data changed");
+    //     setData(newData);
+    //   }, 300), 
+    //   []
+    // );
+
+    const handleDataChange = useCallback(
+      debounce((newData) => {
+          console.log("updated")
+          setData((prevData) => {
+              if (JSON.stringify(prevData) !== JSON.stringify(newData)) {
+                  return newData;
+              }
+              return prevData;
+          });
+      }, 1), // Adjust the debounce delay as needed
+      []
+  );
+
+  
+
+  const handleChange = (e) => {
+    setFuncText(e.target.value);
+    setFormulaBarData({ ...formulaBarData, value: e.target.value });
   };
+
+  const handleKeyDown = (event) => {
+    let formulaTillNow = FuncText;
+    formulaTillNow = formulaTillNow + String.fromCharCode(event.keyCode);
+    setFuncText(formulaTillNow);
+  };
+
+  // ----------------------> UseEffects <---------------------------
+
   useEffect(() => {
+    let id = sheetId;
+    if (!id) {
+      id = uuidv4();
+      navigate(`/sheet/${id}`);
+    }
+    setSheetId(id);
+
     let rows = 100;
-    let columns = 50;
-    let data = [];
+    let columns = 26;
+    let cells = [];
     for (let i = 0; i < rows; i++) {
       let row = [];
       for (let j = 0; j < columns; j++) {
         row.push("");
       }
-      data.push(row);
+      cells.push(row);
     }
-    setData(data);
-  }, []);
-
+    setData(cells);
+  }, [sheetId, navigate]);
 
   useEffect(() => {
-    const s = io("http://localhost:3000");
+    const { rowNum, colNum, value } = formulaBarData;
+    if (rowNum !== null && colNum !== null) {
+      const updatedData = [...data];
+      updatedData[rowNum][colNum] = { value };
+      // setData(updatedData);
+      setHistory([...History, updatedData]);
+      setCurrent(Current + 1);
+    }
+  }, [formulaBarData]);
+
+  useEffect(() => {
+    const s = io("http://localhost:3000"); // Replace with your backend URL
     setSocket(s);
 
-    s.emit("joinSheet", { sheetId });
-
-    s.on("load-document", (loadedData) => {
-      setData(loadedData);
+    s.on("connect", () => {
+      console.log("connected");
+      console.log(s); // Log the socket instance directly
+      s.emit("joinSheet", sheetId); // Join the sheet room
+      s.emit("save-document", { sheetId, data });
+      // s.emit("editCell", {
+      //   sheetId,
+      //   cell: { row: 0, col: 0 },
+      //   value: "Hello World",
+      // })
     });
 
-    s.on("document-updated", ({ data: updatedData }) => {
+    s.on("cellUpdated", ({ cell, value }) => {
+      const { row, col } = cell;
+      const updatedData = [...data];
+      updatedData[row][col] = { value };
       setData(updatedData);
+      console.log("cell updated");
     });
 
     return () => {
@@ -257,9 +338,7 @@ const Test = () => {
 
   return (
     <div>
-      {/* Navbar */}
-
-      <div className="navbar mb-24 h-44">
+      <div className="navbar h-44">
         {/* logo */}
         <div className="div1">
           <img
@@ -328,6 +407,8 @@ const Test = () => {
           <input
             className="focus:caret-transparent focus:outline-none rounded-full h-10 w-[35rem] bg-[#EAF1FF] text-[rgba(0,0,0,0.5)] mt-5 text-center placeholder-center"
             value={FileName}
+            onClick={handleRename}
+            readOnly={true}
           />
         </div>
 
@@ -438,7 +519,7 @@ const Test = () => {
         )}
       </div>
 
-      {/* Formula Bar */}
+        {/* Formula Bar */}
       <div>
         .
         <div className="mt-36">
@@ -454,6 +535,7 @@ const Test = () => {
             >
               <img src={func} alt="func" className="h-8 w-8" />
               <input
+                onChange={handleChange}
                 className="focus:outline-none ml-6 h-full w-screen bg-[#EAF1FF]"
                 placeholder="Enter formula here"
                 value={FuncText}
@@ -461,35 +543,18 @@ const Test = () => {
             </div>
           </div>
         </div>
+        
+        {/* <Spreadsheet
+          className="mt-12"
+          data={data}
+          onChange={(data)=>handleDataChange(data)}
+          onSelect={(selected) => handleCellClick(selected)}
+          onKeyDown={handleKeyDown}
+        /> */}
       </div>
-      <HotTable className="mt-48"
-        settings={
-          {
-            ref: hotRef,
-            contextMenu: true,
-            afterChange: handleAfterChange,
-            data: Data,
-            rowHeaders: true,
-            colHeaders: true,
-            height: "auto",
-            autoWrapRow: true,
-            autoWrapCol: true,
-            licenseKey: "non-commercial-and-evaluation",
-            rowHeaderWidth: 50,
-            manualColumnResize: true,
-            manualRowResize: true,
-            rowHeights: 30,
-            colWidths: 100,
-            copyPaste: true,
-        }}
-        formulas={
-          {
-            engine: hyperformulaInstance,
-          }
-        }
-      />
     </div>
   );
 };
 
-export default Test;
+export default Sheet;
+
