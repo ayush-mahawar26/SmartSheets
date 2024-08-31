@@ -5,6 +5,7 @@ import Handsontable from 'handsontable/base';
 import { registerAllModules } from 'handsontable/registry';
 import { HotTable } from '@handsontable/react';
 import io from "socket.io-client";
+import { useParams } from 'react-router-dom';
 
 const Test = () => {
 
@@ -12,7 +13,7 @@ const Test = () => {
 
     const [Data, setData] = useState([]);
     const [socket, setSocket] = useState(null);
-    const sheetId = 2;
+    const { sheetId } = useParams();
 
     const handleAfterChange = (changes) => {
         if (changes) {
@@ -22,15 +23,13 @@ const Test = () => {
               newData[row][col] = newValue;
             }
           });
-          console.log(changes);
-          console.log(newData);
           setData(newData);
           socket.emit("save-document", { sheetId, data: newData });
         }
       };
     useEffect(() => {
         let rows = 100;
-        let columns = 26;
+        let columns = 40;
         let data = [];
         for (let i = 0; i < rows; i++) {
             let row = [];
@@ -39,7 +38,6 @@ const Test = () => {
             }
             data.push(row);
         }
-        console.log(data);
         setData(data);
     }
     , []);
