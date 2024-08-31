@@ -11,9 +11,12 @@ import io from "socket.io-client";
 import { HyperFormula } from 'hyperformula';
 import { useParams } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const Test = () => {
+  const { sheetId } = useParams();
   const navigate = useNavigate();
 
 
@@ -21,9 +24,17 @@ const Test = () => {
     navigate("/");
   };
 
-  const hyperformulaInstance = HyperFormula.buildEmpty({
-    licenseKey: 'internal-use-in-handsontable',
-  });
+  const handleCollaborate = () => {
+    setTab("Collaborate")
+    navigate("/collaborate");
+  };
+ 
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    await navigator.clipboard.writeText(url);
+    toast.success('Link copied to clipboard');
+  };
 
   const hotRef = useRef(null);
 
@@ -86,7 +97,7 @@ const Test = () => {
       idx_i++;
     }
 
-
+    toast.success('Data sorted');
    
   };
 
@@ -97,6 +108,7 @@ const Test = () => {
     const text = await navigator.clipboard.readText();
     setCopiedData(text.split('\n').map(row => row.split('\t')));
     console.log(CopiedData);
+    toast.success('Data copied to clipboard');
   };
 
   const handlePaste = () => {
@@ -120,10 +132,10 @@ const Test = () => {
       }
       idx_i++;
     }
-
+    toast.success('Data pasted');
   };
 
-  const { sheetId } = useParams();
+  
 
   const handleDelete = () => {
     let hotInstance = hotRef.current.hotInstance;
@@ -206,12 +218,47 @@ const Test = () => {
     input.click();
   };
 
+  const handleLogout = () => { 
+    localStorage.removeItem('token');
+    navigate('/signin');
+   }
+
+  const handleInsertRowBelow = () => {
+    let hotInstance = hotRef.current.hotInstance;
+    hotInstance.alter('insert_row_below', hotInstance.getSelectedLast()[0]);
+  }
+
+  const handleInsertRowAbove = () => {
+    let hotInstance = hotRef.current.hotInstance;
+    hotInstance.alter('insert_row_above', hotInstance.getSelectedLast()[0]);
+  }
+
+  const handleRemoveRow = () => {
+    let hotInstance = hotRef.current.hotInstance;
+    hotInstance.alter('remove_row', hotInstance.getSelectedLast()[0]);
+  }
+
+  const handleInsertColumnBefore = () => {
+    let hotInstance = hotRef.current.hotInstance;
+    hotInstance.alter('insert_col_start', hotInstance.getSelectedLast()[1]);
+  }
+
+  const handleInsertColumnAfter = () => {
+    let hotInstance = hotRef.current.hotInstance;
+    hotInstance.alter('insert_col_end', hotInstance.getSelectedLast()[1]);
+  }
+
+  const handleDeleteCol = () => {
+    let hotInstance = hotRef.current.hotInstance;
+    hotInstance.alter('remove_col', hotInstance.getSelectedLast()[1]);
+  }
+
+
   const [Data, setData] = useState([]);
   const [socket, setSocket] = useState(null);
-  // const sheetId = 4;
 
   const handleAfterChange = (changes) => {
-    if (changes) {
+    if (changes && changes.length > 0) {
       console.log("updated");
       const newData = [...Data];
       changes.forEach(([row, col, oldValue, newValue]) => {
@@ -236,6 +283,8 @@ const Test = () => {
     setFuncText(cellData);
     setPrevSelection({ range: { start: { row: r, col: c }, end: { row: r2, col: c2 } } });
   };
+
+  // ------------------------------> UseEffect <------------------------------------------
 
   useEffect(() => {
     registerAllModules();
@@ -274,6 +323,7 @@ const Test = () => {
   return (
     <div>
       {/* Navbar */}
+      <ToastContainer />
 
       <div className="navbar mb-24 h-44">
         {/* logo */}
@@ -288,9 +338,9 @@ const Test = () => {
 
         {/* profile */}
         <div className="div2">
-          <button className="rounded-full h-16 w-16 bg-[#EAF1FF] flex justify-center mt-10">
-            <div className="flex flex-col justify-center h-full text-xl">
-              👤
+          <button onClick={handleLogout} className="border rounded-full h-20 w-20 bg-[#EAF1FF] flex justify-center mt-10 hover:bg-blue-100">
+            <div className="flex flex-col justify-center h-full text-l">
+              Logout
             </div>
           </button>
         </div>
@@ -352,9 +402,7 @@ const Test = () => {
         {/* tabs */}
         <div className="div5 flex gap-6">
           <button
-            onClick={(e) => {
-              setTab("Collaborate");
-            }}
+            onClick={handleCollaborate}
             className={`${
               Tab === "Collaborate" ? "font-bold text-blue-500" : ""
             } flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
@@ -372,9 +420,7 @@ const Test = () => {
             Comments
           </button>
           <button
-            onClick={(e) => {
-              setTab("Share");
-            }}
+            onClick={handleShare}
             className={`${
               Tab === "Share" ? "font-bold text-blue-500" : ""
             } flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
@@ -448,6 +494,48 @@ const Test = () => {
             </button>
           </div>
         )}
+
+        {Tab === "Insert" && (
+          <div className="div6 flex h-14 gap-6">
+            <button
+              onClick={handleInsertRowBelow}
+              className="hover:bg-blue-100 border p-4 rounded w-48 bg-[#EAF1FF]"
+            >
+              Insert Row Below
+            </button>
+            <button
+              onClick={handleInsertRowAbove}
+              className="hover:bg-blue-100 border p-4 rounded w-48 bg-[#EAF1FF]"
+            >
+              Insert Row Above
+            </button>
+            <button
+              onClick={handleRemoveRow}
+              className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-48"
+            >
+              Delete Row
+            </button>
+            <button
+              onClick={handleInsertColumnBefore}
+              className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-58"
+            >
+              Insert Column Before
+            </button>
+            <button
+              onClick={handleInsertColumnAfter}
+              className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-48"
+            >
+              Insert Column After
+            </button>
+            <button
+              onClick={handleDeleteCol}
+              className="hover:bg-blue-100 border rounded p-4 bg-[#EAF1FF] w-48"
+            >
+              Delete Column
+            </button>
+          </div>
+        )}
+
       </div>
 
       {/* Formula Bar */}
@@ -498,14 +586,12 @@ const Test = () => {
             copyPaste: true,
             undo: true,
             outsideClickDeselects: false,
-            afterSetDataAtCell: (changes) => {
-              console.log("here", changes);
-            }
-            
+            afterCreateRow: handleAfterChange,
+            afterCreateCol: handleAfterChange,
         }}
         formulas={
           {
-            engine: hyperformulaInstance,
+            engine: HyperFormula,
           }
         }
         ref={hotRef}
