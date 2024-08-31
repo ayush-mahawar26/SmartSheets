@@ -61,7 +61,7 @@ io.on('connection', (socket) => {
       } else {
         const emptyData = Array(100)
           .fill()
-          .map(() => Array(26).fill(''));
+          .map(() => Array(50).fill(''));
 
         const newSheet = new Sheets({
           sheetid: sheetId,
