@@ -1,36 +1,79 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import smartsheets from "../assets/smartsheets.png";
 import { useNavigate } from "react-router-dom";
 import demoPage from "../assets/demoPage.png";
 import { v4 as uuid } from 'uuid';
+import FileCard from '../components/FileCard';
 
 const LandingPage = () => {
+  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userDetails, setUserDetails] = useState(null);
+  const [sheets, setSheets] = useState([]);
 
-    const navigate = useNavigate();
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const capitalizeFirstLetter = (string) => {
+    if (!string) return '';
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+  };
 
-    useEffect(() => {
-      const token = localStorage.getItem('token'); // Retrieve the token from localStorage
-      setIsLoggedIn(!!token); // Set isLoggedIn to true if the token exists
-    }, []);
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch('http://localhost:3000/user/me', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then(response => response.json())
+        .then(data => {
+          setIsLoggedIn(true);
+          setUserDetails(data);
+        })
+        .catch(error => {
+          console.error('Error fetching user details:', error);
+        });
+    }
 
-    const handleNewSpreadsheet = () => {
-      if (isLoggedIn) {
-        const sheetId = uuid();
-        navigate(`/testing/${sheetId}`); 
-      } else {
-        navigate('/signin'); // Redirect to login if not logged in
-      }
-    };
+    // Fetch sheets data
+    fetch('http://localhost:3000/sheet/all', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then(response => response.json())
+      .then(data => {
+        setSheets(data);
+      })
+      .catch(error => {
+        console.error('Error fetching sheets:', error);
+      });
+  }, []);
+
+  const handleNewSpreadsheet = () => {
+    if (isLoggedIn) {
+      const sheetId = uuid();
+      navigate(`/testing/${sheetId}`);
+    } else {
+      navigate('/signin');
+    }
+  };
+
+  const handleFileClick = (sheetId) => {
+    navigate(`/testing/${sheetId}`);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="flex min-h-screen">
       {/* Sidebar */}
-      <div className="w-1/3 bg-[#EAF1FF] flex flex-col items-center justify-center rounded-r-lg shadow-lg">
+      <div className="w-1/3 bg-[#EAF1FF] flex flex-col items-center justify-center fixed top-0 left-0 h-full shadow-lg">
         <div className="mb-8">
-            <img src={smartsheets} alt="Smartsheets" className="w-80" />
+          <img src={smartsheets} alt="Smartsheets" className="w-80 mt-8" />
         </div>
-        <h2 className="text-xl text-gray-800 mb-6">Welcome back Chirag!</h2>
+        <h2 className="text-xl text-gray-800 mb-6">
+          {userDetails ? `Welcome back, ${capitalizeFirstLetter(userDetails.firstName)}!` : 'Welcome back!'}
+        </h2>
         <button className="bg-blue-500 text-white text-lg py-2 px-6 rounded-lg mb-4 shadow" onClick={handleNewSpreadsheet}>
           New Spreadsheet
         </button>
@@ -40,28 +83,19 @@ const LandingPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-10 bg-[#F9FBFD]">
+      <div className="flex-1 p-10 bg-[#F9FBFD] ml-[33%] overflow-y-auto">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6">Existing Files</h2>
 
         <div className="grid grid-cols-1 gap-6">
-          {/* File 1 */}
-          <div className="bg-white p-4 rounded-lg shadow-lg">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-700">Database</h3>
-              <span className="text-sm text-gray-500">Last Modified - 28/08/2024</span>
-            </div>
-            <img src={demoPage} alt="People Spreadsheet" className="h-60 rounded-lg" />
-
-          </div>
-
-          {/* File 2 */}
-          <div className="bg-white p-4 rounded-lg shadow-lg">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-700">People</h3>
-              <span className="text-sm text-gray-500">Last Modified - 26/08/2024</span>
-            </div>
-            <img src={demoPage} alt="People Spreadsheet" className="h-60 rounded-lg" />
-          </div>
+          {sheets.map(sheet => (
+            <FileCard
+              key={sheet._id}
+              title={sheet.sheetName}
+              lastModified={new Date(sheet.updatedAt).toLocaleDateString()}
+              image={demoPage}
+              onClick={() => handleFileClick(sheet.sheetid)} // Pass the sheetId to the click handler
+            />
+          ))}
         </div>
       </div>
     </div>
