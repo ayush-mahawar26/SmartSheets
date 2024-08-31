@@ -79,28 +79,28 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen">
       {/* Sidebar */}
-      <div className="w-1/3 bg-[#EAF1FF] flex flex-col items-center justify-center fixed top-0 left-0 h-full shadow-lg p-6">
-        <img src={smartsheets} alt="Smartsheets" className="w-80 mb-8" />
-        <h2 className="text-xl text-gray-800 mb-6">
+      <div className="w-full md:w-1/3 bg-[#EAF1FF] flex flex-col items-center justify-center md:fixed top-0 left-0 h-full shadow-lg p-6">
+        <img src={smartsheets} alt="Smartsheets" className="w-40 md:w-80 mb-8" />
+        <h2 className="text-lg md:text-xl text-gray-800 mb-6">
           {userDetails ? `Welcome back, ${capitalizeFirstLetter(userDetails.firstName)}!` : 'Welcome back!'}
         </h2>
 
-        <div className="flex flex-col items-center space-y-4">
-          <button className="bg-blue-500 text-white text-lg py-2 px-6 rounded-lg shadow" onClick={handleNewSpreadsheet}>
+        <div className="flex flex-col items-center space-y-4 w-full">
+          <button className="bg-blue-500 text-white text-base md:text-lg py-2 px-6 rounded-lg shadow w-full" onClick={handleNewSpreadsheet}>
             New Spreadsheet
           </button>
-          <button className="bg-blue-200 text-black text-lg py-2 px-14 w-52 rounded-lg shadow" onClick={handleCollaborateClick}>
+          <button className="bg-blue-200 text-black text-base md:text-lg py-2 px-14 rounded-lg shadow w-full" onClick={handleCollaborateClick}>
             Collaborate
           </button>
 
           {!isLoggedIn ? (
-            <button className="bg-green-500 text-white text-lg py-2 px-14 w-52 rounded-lg shadow" onClick={handleSignIn}>
+            <button className="bg-green-500 text-white text-base md:text-lg py-2 px-14 rounded-lg shadow w-full" onClick={handleSignIn}>
               Sign In
             </button>
           ) : (
-            <button className="bg-red-500 text-white text-lg py-2 px-14 w-52 rounded-lg shadow" onClick={handleSignOut}>
+            <button className="bg-red-500 text-white text-base md:text-lg py-2 px-14 rounded-lg shadow w-full" onClick={handleSignOut}>
               Sign Out
             </button>
           )}
@@ -108,14 +108,13 @@ const LandingPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-10 bg-[#F9FBFD] ml-[33%] overflow-y-auto">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6">Existing Files</h2>
+      <div className="flex-1 p-6 md:p-10 bg-[#F9FBFD] md:ml-[33%] overflow-y-auto">
+        <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-6">Existing Files</h2>
 
         {sheets.length === 0 ? (
-          // <p className="text-gray-600">No files available</p>
-          <p className="text-gray-600 text-2xl text-center mt-20">No files available</p>
+          <p className="text-gray-600 text-lg md:text-2xl text-center mt-20">No files available</p>
         ) : (
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {sheets.map(sheet => (
               <FileCard
                 key={sheet._id}

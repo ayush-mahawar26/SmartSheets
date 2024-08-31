@@ -7,7 +7,7 @@ const FileCard = ({ title, lastModified, image, onClick }) => {
       onClick={onClick}
     >
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium text-gray-700">{title}</h3>
+        <h3 className="text-sm font-medium text-gray-700">{title}</h3>
         <span className="text-sm text-gray-500">Last Modified - {lastModified}</span>
       </div>
       <img src={image} alt={`${title} Spreadsheet`} className="h-60 rounded-lg" />
