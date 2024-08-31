@@ -11,9 +11,22 @@ const { sheetRoute } = require("./controllers/sheet_controller.js");
 const { log } = require("console");
 const { Sheets } = require("./models/sheet_model.js");
 
+const _ = require('lodash');
+
+function deepMerge(target, source) {
+  return _.merge({}, target, source);
+}
+
 // socket server
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIo(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["my-custom-header"],
+    credentials: true
+  }
+});
 
 dotenv.config("./");
 
@@ -32,47 +45,68 @@ app.use("/user", userRoute);
 app.use("/sheet", sheetRoute);
 
 // socket IO
-io.on("connection", (socket) => {
-  console.log("socket connected !! ", socket.id);
+io.on('connection', (socket) => {
+  console.log('New client connected');
 
-  // User joins a specific sheet
-  // make the collaborator join the sheet by (sheetId)
-  socket.on("joinSheet", (sheetId) => {
+  // Handle when a client joins a sheet
+  socket.on('joinSheet', async ({ sheetId }) => {
+    console.log(`Client joined sheet: ${sheetId}`);
     socket.join(sheetId);
-    console.log(`User ${socket.id} joined sheet ${sheetId}`);
-  });
 
-  // User edits a cell
-  socket.on("editCell", async ({ sheetId, cell, value }) => {
-    io.broadcast.to(sheetId).emit("cellUpdated", { cell, value });
     try {
-      await Sheets.updateOne(
-        { sheetid: sheetId, "data.row": cell.row, "data.col": cell.col },
-        {
-          $set: {
-            "data.$.value": value,
-          },
-        },
-        { upsert: true } // create if not exist
-      );
+      const sheet = await Sheets.findOne({ sheetid: sheetId });
 
-      console.log(`Cell updated in sheet ${sheetId}:`, cell);
+      if (sheet) {
+        socket.emit('load-document', sheet.data);
+      } else {
+        const emptyData = Array(100)
+          .fill()
+          .map(() => Array(26).fill(''));
+
+        const newSheet = new Sheets({
+          sheetid: sheetId,
+          data: emptyData,
+          sheetName: `Sheet ${sheetId}`,
+        });
+
+        await newSheet.save();
+        socket.emit('load-document', emptyData);
+      }
     } catch (error) {
-      console.error("Error updating cell in MongoDB:", error);
+      console.error('Error loading document from MongoDB:', error);
     }
   });
 
-  socket.on("save-document", async ({ sheetId, data }) => {
-    await Sheets.updateOne(
-      { sheetid: sheetId },
-      {
-        $set: {
-          data: data,
-        },
+  // Handle when a client saves changes to the sheet
+  socket.on('save-document', async ({ sheetId, data }) => {
+    try {
+      const existingDocument = await Sheets.findOne({ sheetid: sheetId });
+
+      if (existingDocument) {
+        existingDocument.data = data;
+        existingDocument.updatedAt = new Date();
+        await existingDocument.save();
+
+        // Broadcast the updated data to other clients in the same room
+        socket.to(sheetId).emit('document-updated', { sheetId, data });
+      } else {
+        console.log('No document found with the given sheetId');
       }
-    );
+    } catch (error) {
+      console.error('Error updating document in MongoDB:', error);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
   });
 });
+
+
+io.on("disconnect", (socket) => {
+  console.log("socket disconnected !! ", socket.id);
+});
+
 
 server.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

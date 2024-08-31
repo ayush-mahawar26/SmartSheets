@@ -4,7 +4,8 @@ import './App.css'
 import Signin from './pages/Signin'
 import Signup from './pages/Signup'
 import LandingPage from './pages/LandingPage'
-import Sheet from './pages/Sheet'
+// import Sheet from './pages/Sheet'
+import Test from './pages/Test'
 
 
 function App() {
@@ -13,9 +14,10 @@ function App() {
       <BrowserRouter>
         <Routes>
         <Route path='/' element={<LandingPage />}/>
-        <Route path="/sheet" element={<Sheet />} />
+        {/* <Route path="/sheet" element={<Sheet />} /> */}
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
+        <Route path="/testing" element={<Test />} />
         </Routes>
       </BrowserRouter>
     </>

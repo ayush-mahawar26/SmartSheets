@@ -10,12 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@handsontable/react": "^14.5.0",
     "@syncfusion/ej2-react-spreadsheet": "^26.2.10",
     "axios": "^1.6.8",
+    "handsontable": "^14.5.0",
+    "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.3",
-    "react-spreadsheet": "^0.9.5"
+    "react-spreadsheet": "^0.9.5",
+    "socket.io-client": "^4.7.5",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.56",
