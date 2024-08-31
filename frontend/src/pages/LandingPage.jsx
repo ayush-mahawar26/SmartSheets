@@ -1,14 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import smartsheets from "../assets/smartsheets.png";
 import { useNavigate } from "react-router-dom";
 import demoPage from "../assets/demoPage.png";
+import { v4 as uuid } from 'uuid';
 
 const LandingPage = () => {
 
     const navigate = useNavigate();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    useEffect(() => {
+      const token = localStorage.getItem('token'); // Retrieve the token from localStorage
+      setIsLoggedIn(!!token); // Set isLoggedIn to true if the token exists
+    }, []);
 
     const handleNewSpreadsheet = () => {
-      navigate('/sheet');
+      if (isLoggedIn) {
+        const sheetId = uuid();
+        navigate(`/testing/${sheetId}`); 
+      } else {
+        navigate('/signin'); // Redirect to login if not logged in
+      }
     };
 
   return (
@@ -30,7 +42,7 @@ const LandingPage = () => {
       {/* Main Content */}
       <div className="flex-1 p-10 bg-[#F9FBFD]">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6">Existing Files</h2>
-        
+
         <div className="grid grid-cols-1 gap-6">
           {/* File 1 */}
           <div className="bg-white p-4 rounded-lg shadow-lg">
@@ -39,7 +51,7 @@ const LandingPage = () => {
               <span className="text-sm text-gray-500">Last Modified - 28/08/2024</span>
             </div>
             <img src={demoPage} alt="People Spreadsheet" className="h-60 rounded-lg" />
-            
+
           </div>
 
           {/* File 2 */}

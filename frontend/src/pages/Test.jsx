@@ -9,9 +9,12 @@ import { registerAllModules } from "handsontable/registry";
 import { HotTable } from "@handsontable/react";
 import io from "socket.io-client";
 import { HyperFormula } from 'hyperformula';
+import { useParams } from 'react-router-dom';
+
 
 const Test = () => {
   const navigate = useNavigate();
+
 
   const handleHome = () => {
     navigate("/");
@@ -132,6 +135,7 @@ const Test = () => {
 
     setData(newData);
   };
+  const { sheetId } = useParams();
 
   const handleDelete = () => {
     const { start, end } = PrevSelection.range;
@@ -198,6 +202,7 @@ const Test = () => {
         newData = newData.map((row) => row.map((cell) => ({ value: cell })));
         setData(newData);
       };
+
       reader.readAsText(file);
     };
     input.click();
