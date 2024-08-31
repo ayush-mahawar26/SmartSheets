@@ -90,15 +90,14 @@ const Test = () => {
     let idx_i = 0;
     let idx_j = 0;
     for(let i=startRow; i<=endRow; i++){
+      idx_j = startCol;
       for(let j=startCol; j<=endCol; j++){
         hotInstance.setDataAtCell(i, j, array[idx_j]);
         idx_j++;
       }
       idx_i++;
     }
-
     toast.success('Data sorted');
-   
   };
 
   const handleCopy = async () => {
@@ -120,13 +119,16 @@ const Test = () => {
     let endCol = selected[0][3];
 
     console.log(startRow, startCol, endRow, endCol);
-    console.log(CopiedData);
+    console.log("copied data", CopiedData);
 
     let idx_i = startRow;
     let idx_j = startCol;
 
-    for(let i=0; i<=CopiedData.length; i++){
-      for(let j=0; j<=CopiedData[0].length; j++){
+    console.log(CopiedData.length, CopiedData[0].length);
+
+    for(let i=0; i<CopiedData.length; i++){
+      idx_j = startCol;
+      for(let j=0; j<CopiedData[0].length; j++){
         hotInstance.setDataAtCell(idx_i, idx_j, CopiedData[i][j]);
         idx_j++;
       }
@@ -140,7 +142,7 @@ const Test = () => {
   const handleDelete = () => {
     let hotInstance = hotRef.current.hotInstance;
     let selected = hotInstance.getSelected();
-    
+
     let startRow = selected[0][0];
     let startCol = selected[0][1];
     let endRow = selected[0][2];
@@ -192,6 +194,7 @@ const Test = () => {
 
   const handleNewFile = () => {
     const id = uuid();
+    setFileName("Untitled Spreadsheet");
     navigate(`/testing/${id}`);
   };
 
@@ -586,8 +589,6 @@ const Test = () => {
             copyPaste: true,
             undo: true,
             outsideClickDeselects: false,
-            afterCreateRow: handleAfterChange,
-            afterCreateCol: handleAfterChange,
         }}
         formulas={
           {
