@@ -14,17 +14,18 @@ const { Sheets } = require("./models/sheet_model.js");
 const _ = require("lodash");
 
 app.use(express.json());
-app.use(cors({
-  origin: "*",
-}));
-app.options('*', cors());
-
+app.use(
+  cors({
+    origin: "https://smartsheetfrontend.onrender.com/",
+  })
+);
+app.options("https://smartsheetfrontend.onrender.com/", cors());
 
 // socket server
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "*",
+    origin: "https://smartsheetfrontend.onrender.com/",
     methods: ["GET", "POST"],
     allowedHeaders: ["my-custom-header"],
     credentials: true,
@@ -32,7 +33,6 @@ const io = socketIo(server, {
 });
 
 dotenv.config("./");
-
 
 // test
 app.get("/", (req, res) => {
@@ -103,13 +103,11 @@ io.on("connection", (socket) => {
           existingDocument.updatedAt = new Date();
           await existingDocument.save();
 
-          socket
-            .to(sheetId)
-            .emit("document-updated", {
-              sheetId,
-              data,
-              FileName: existingDocument.sheetName,
-            });
+          socket.to(sheetId).emit("document-updated", {
+            sheetId,
+            data,
+            FileName: existingDocument.sheetName,
+          });
         } else {
           socket.emit(
             "unauthorized",
