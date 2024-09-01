@@ -17,8 +17,10 @@ const _ = require('lodash');
 app.use(express.json());
 app.use(cors({
   origin: "*",
-  
 }));
+app.options('*', cors());
+
+
 // socket server
 const server = http.createServer(app);
 const io = socketIo(server, {
