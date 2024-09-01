@@ -20,7 +20,7 @@ const LandingPage = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      fetch('http://localhost:3000/user/me', {
+      fetch('https://smartsheets.onreader.com/user/me', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -36,7 +36,7 @@ const LandingPage = () => {
         });
     }
 
-    fetch('http://localhost:3000/sheet/owned', {
+    fetch('https://smartsheets.onreader.com/sheet/owned', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -50,7 +50,7 @@ const LandingPage = () => {
         console.error('Error fetching owned sheets:', error);
       });
 
-    fetch('http://localhost:3000/sheet/collaborated', {
+    fetch('https://smartsheets.onreader.com/sheet/collaborated', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

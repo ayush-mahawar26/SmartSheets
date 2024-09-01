@@ -14,6 +14,11 @@ const { Sheets } = require("./models/sheet_model.js");
 const _ = require('lodash');
 
 
+app.use(express.json());
+app.use(cors({
+  origin: "*",
+  
+}));
 // socket server
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -27,8 +32,6 @@ const io = socketIo(server, {
 
 dotenv.config("./");
 
-app.use(express.json());
-app.use(cors());
 
 // test
 app.get("/", (req, res) => {

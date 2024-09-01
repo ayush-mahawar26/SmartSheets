@@ -24,7 +24,7 @@ const Test = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
-            fetch('http://localhost:3000/user/me', {
+            fetch('https://smartsheets.onreader.com/user/me', {
                 method: 'GET',
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -329,7 +329,7 @@ const Test = () => {
 
   useEffect(() => {
     if (userDetails && userDetails._id) {
-      const s = io("http://localhost:3000");
+      const s = io("https://smartsheets.onreader.com");
       setSocket(s);
 
       s.emit("joinSheet", { sheetId, userId: userDetails._id,FileName });
