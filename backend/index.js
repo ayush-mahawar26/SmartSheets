@@ -11,8 +11,7 @@ const { sheetRoute } = require("./controllers/sheet_controller.js");
 const { log } = require("console");
 const { Sheets } = require("./models/sheet_model.js");
 
-const _ = require('lodash');
-
+const _ = require("lodash");
 
 // socket server
 const server = http.createServer(app);
@@ -21,8 +20,8 @@ const io = socketIo(server, {
     origin: "*",
     methods: ["GET", "POST"],
     allowedHeaders: ["my-custom-header"],
-    credentials: true
-  }
+    credentials: true,
+  },
 });
 
 dotenv.config("./");
@@ -42,10 +41,10 @@ app.use("/user", userRoute);
 app.use("/sheet", sheetRoute);
 
 // socket IO
-io.on('connection', (socket) => {
-  console.log('New client connected');
+io.on("connection", (socket) => {
+  console.log("New client connected");
 
-  socket.on('joinSheet', async ({ sheetId, userId,FileName }) => {
+  socket.on("joinSheet", async ({ sheetId, userId, FileName }) => {
     console.log(`Client with userId: ${userId} joined sheet: ${sheetId}`);
     socket.join(sheetId);
 
@@ -53,16 +52,19 @@ io.on('connection', (socket) => {
       const sheet = await Sheets.findOne({ sheetid: sheetId });
 
       if (sheet) {
-        if (sheet.owner.equals(userId) || sheet.collaborators.includes(userId)) {
-          socket.emit('load-document', sheet.data);
+        if (
+          sheet.owner.equals(userId) ||
+          sheet.collaborators.includes(userId)
+        ) {
+          socket.emit("load-document", sheet.data);
         } else {
-          socket.emit('unauthorized', 'You do not have access to this sheet.');
+          socket.emit("unauthorized", "You do not have access to this sheet.");
         }
       } else {
         const emptyData = Array(100)
           .fill()
-          .map(() => Array(50).fill(''));
-          console.log(FileName);
+          .map(() => Array(50).fill(""));
+        console.log(FileName);
 
         const newSheet = new Sheets({
           sheetid: sheetId,
@@ -72,20 +74,23 @@ io.on('connection', (socket) => {
         });
 
         await newSheet.save();
-        socket.emit('load-document', emptyData);
+        socket.emit("load-document", emptyData);
       }
     } catch (error) {
-      console.error('Error loading document from MongoDB:', error);
-      socket.emit('error', 'An error occurred while loading the document.');
+      console.error("Error loading document from MongoDB:", error);
+      socket.emit("error", "An error occurred while loading the document.");
     }
   });
 
-  socket.on('save-document', async ({ sheetId, data, userId, FileName }) => {
+  socket.on("save-document", async ({ sheetId, data, userId, FileName }) => {
     try {
       const existingDocument = await Sheets.findOne({ sheetid: sheetId });
 
       if (existingDocument) {
-        if (existingDocument.owner.equals(userId) || existingDocument.collaborators.includes(userId)) {
+        if (
+          existingDocument.owner.equals(userId) ||
+          existingDocument.collaborators.includes(userId)
+        ) {
           existingDocument.data = data;
           if (FileName) {
             existingDocument.sheetName = FileName;
@@ -93,30 +98,37 @@ io.on('connection', (socket) => {
           existingDocument.updatedAt = new Date();
           await existingDocument.save();
 
-          socket.to(sheetId).emit('document-updated', { sheetId, data, FileName: existingDocument.sheetName });
+          socket
+            .to(sheetId)
+            .emit("document-updated", {
+              sheetId,
+              data,
+              FileName: existingDocument.sheetName,
+            });
         } else {
-          socket.emit('unauthorized', 'You do not have permission to edit this sheet.');
+          socket.emit(
+            "unauthorized",
+            "You do not have permission to edit this sheet."
+          );
         }
       } else {
-        console.log('No document found with the given sheetId');
-        socket.emit('error', 'No document found with the given sheetId.');
+        console.log("No document found with the given sheetId");
+        socket.emit("error", "No document found with the given sheetId.");
       }
     } catch (error) {
-      console.error('Error updating document in MongoDB:', error);
-      socket.emit('error', 'An error occurred while saving the document.');
+      console.error("Error updating document in MongoDB:", error);
+      socket.emit("error", "An error occurred while saving the document.");
     }
   });
 
-
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
+  socket.on("disconnect", () => {
+    console.log("Client disconnected");
   });
 });
 
 io.on("disconnect", (socket) => {
   console.log("socket disconnected !! ", socket.id);
 });
-
 
 server.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
