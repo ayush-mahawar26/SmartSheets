@@ -21,26 +21,26 @@ const Test = () => {
 
   const [userDetails, setUserDetails] = useState(null);
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            fetch('http://localhost:3000/user/me', {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
-                .then(response => response.json())
-                .then(data => {
-                    setUserDetails(data);
-                })
-                .catch(error => {
-                    console.error('Error fetching user details:', error);
-                });
-        }
-    }, []);
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch('https://smartsheets.onrender.com/user/me', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then(response => response.json())
+        .then(data => {
+          setUserDetails(data);
+        })
+        .catch(error => {
+          console.error('Error fetching user details:', error);
+        });
+    }
+  }, []);
 
-    console.log(userDetails);
+  console.log(userDetails);
 
   const handleHome = () => {
     navigate("/");
@@ -84,9 +84,9 @@ const Test = () => {
     console.log(startRow, startCol, endRow, endCol);
 
     let temp = [];
-    for(let i=startRow; i<=endRow; i++){
+    for (let i = startRow; i <= endRow; i++) {
       let row = [];
-      for(let j=startCol; j<=endCol; j++){
+      for (let j = startCol; j <= endCol; j++) {
         row.push(Data[i][j]);
       }
       temp.push(row);
@@ -94,13 +94,13 @@ const Test = () => {
 
     let array = [];
 
-    if(startRow ==endRow){
+    if (startRow == endRow) {
       temp[0].sort();
       array = temp[0];
     }
-    else if(startCol == endCol){
+    else if (startCol == endCol) {
       let temp1 = [];
-      for(let i=0; i<temp.length; i++){
+      for (let i = 0; i < temp.length; i++) {
         temp1.push(temp[i][0]);
       }
       temp1.sort();
@@ -111,9 +111,9 @@ const Test = () => {
 
     let idx_i = 0;
     let idx_j = 0;
-    for(let i=startRow; i<=endRow; i++){
+    for (let i = startRow; i <= endRow; i++) {
       idx_j = startCol;
-      for(let j=startCol; j<=endCol; j++){
+      for (let j = startCol; j <= endCol; j++) {
         hotInstance.setDataAtCell(i, j, array[idx_j]);
         idx_j++;
       }
@@ -148,9 +148,9 @@ const Test = () => {
 
     console.log(CopiedData.length, CopiedData[0].length);
 
-    for(let i=0; i<CopiedData.length; i++){
+    for (let i = 0; i < CopiedData.length; i++) {
       idx_j = startCol;
-      for(let j=0; j<CopiedData[0].length; j++){
+      for (let j = 0; j < CopiedData[0].length; j++) {
         hotInstance.setDataAtCell(idx_i, idx_j, CopiedData[i][j]);
         idx_j++;
       }
@@ -172,8 +172,8 @@ const Test = () => {
 
     console.log(startRow, startCol, endRow, endCol);
 
-    for(let i=startRow; i<=endRow; i++){
-      for(let j=startCol; j<=endCol; j++){
+    for (let i = startRow; i <= endRow; i++) {
+      for (let j = startCol; j <= endCol; j++) {
         hotInstance.setDataAtCell(i, j, "");
       }
     }
@@ -247,7 +247,7 @@ const Test = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/signin');
-   }
+  }
 
   const handleInsertRowBelow = () => {
     let hotInstance = hotRef.current.hotInstance;
@@ -292,7 +292,7 @@ const Test = () => {
         }
       });
       setData(newData);
-    //   socket.emit("save-document", { sheetId, data: newData });
+      //   socket.emit("save-document", { sheetId, data: newData });
       socket.emit("save-document", { sheetId, data: newData, userId: userDetails._id });
     }
   };
@@ -300,10 +300,10 @@ const Test = () => {
   const handleSelection = (r, c, r2, c2) => {
     const hotInstance = hotRef.current.hotInstance;
     const cellData = hotInstance.getDataAtCell(r, c);
-    if(r==r2 && c==c2){
+    if (r == r2 && c == c2) {
       setCoordinate(`${String.fromCharCode(65 + c)}${r + 1}`);
     }
-    else{
+    else {
       setCoordinate(`${String.fromCharCode(65 + c)}${r + 1}:${String.fromCharCode(65 + c2)}${r2 + 1}`);
     }
     setFuncText(cellData);
@@ -329,10 +329,10 @@ const Test = () => {
 
   useEffect(() => {
     if (userDetails && userDetails._id) {
-      const s = io("http://localhost:3000");
+      const s = io("https://smartsheets.onrender.com");
       setSocket(s);
 
-      s.emit("joinSheet", { sheetId, userId: userDetails._id,FileName });
+      s.emit("joinSheet", { sheetId, userId: userDetails._id, FileName });
 
       s.on("load-document", (loadedData) => {
         setData(loadedData);
@@ -389,9 +389,8 @@ const Test = () => {
             onClick={(e) => {
               setTab("File");
             }}
-            className={`${
-              Tab === "File" ? "font-bold text-blue-500" : ""
-            } flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
+            className={`${Tab === "File" ? "font-bold text-blue-500" : ""
+              } flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
           >
             File
           </button>
@@ -399,9 +398,8 @@ const Test = () => {
             onClick={(e) => {
               setTab("Edit");
             }}
-            className={`${
-              Tab === "Edit" ? "font-bold text-blue-500" : ""
-            } flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
+            className={`${Tab === "Edit" ? "font-bold text-blue-500" : ""
+              } flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
           >
             Edit
           </button>
@@ -409,9 +407,8 @@ const Test = () => {
             onClick={(e) => {
               setTab("View");
             }}
-            className={`${
-              Tab === "View" ? "font-bold text-blue-500" : ""
-            } flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
+            className={`${Tab === "View" ? "font-bold text-blue-500" : ""
+              } flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
           >
             View
           </button>
@@ -419,9 +416,8 @@ const Test = () => {
             onClick={(e) => {
               setTab("Insert");
             }}
-            className={`${
-              Tab === "Insert" ? "font-bold text-blue-500" : ""
-            } flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
+            className={`${Tab === "Insert" ? "font-bold text-blue-500" : ""
+              } flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
           >
             Insert
           </button>
@@ -441,9 +437,8 @@ const Test = () => {
         <div className="div5 flex gap-6">
           <button
             onClick={handleCollaborate}
-            className={`${
-              Tab === "Collaborate" ? "font-bold text-blue-500" : ""
-            } flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
+            className={`${Tab === "Collaborate" ? "font-bold text-blue-500" : ""
+              } flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
           >
             Collaborate
           </button>
@@ -451,17 +446,15 @@ const Test = () => {
             onClick={(e) => {
               setTab("Comments");
             }}
-            className={`${
-              Tab === "Comments" ? "font-bold text-blue-500" : ""
-            } flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
+            className={`${Tab === "Comments" ? "font-bold text-blue-500" : ""
+              } flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
           >
             Comments
           </button>
           <button
             onClick={handleShare}
-            className={`${
-              Tab === "Share" ? "font-bold text-blue-500" : ""
-            } flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
+            className={`${Tab === "Share" ? "font-bold text-blue-500" : ""
+              } flex flex-col h-8 mr-8 mt-6 hover:text-blue-500`}
           >
             Share
           </button>
@@ -624,7 +617,7 @@ const Test = () => {
             copyPaste: true,
             undo: true,
             outsideClickDeselects: false,
-        }}
+          }}
         formulas={
           {
             engine: HyperFormula,
