@@ -11,7 +11,7 @@ const CollaboratePage = () => {
   };
 
   const handleCollaborate = () => {
-    fetch(`https://smartsheets.onrender.com/sheet/${sheetId}/collaborate`, {
+    fetch(`https://smartsheets.onreader.com/sheet/${sheetId}/collaborate`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,

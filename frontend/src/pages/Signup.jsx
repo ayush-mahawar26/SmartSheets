@@ -18,7 +18,7 @@ function Signup() {
 
   const handleSignup = async () => {
     try {
-      const resp = await axios.post("https://smartsheets.onrender.com/user/signup", {
+      const resp = await axios.post("https://smartsheets.onreader.com/user/signup", {
         useremail,
         firstName,
         lastName,
