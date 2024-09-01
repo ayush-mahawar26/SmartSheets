@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 function Signin() {
   const [useremail, setUserEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(""); 
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleSignIn = async () => {
@@ -28,9 +28,9 @@ function Signin() {
   };
 
   return (
-    <div className="bg-slate-300 h-screen flex items-center justify-center">
+    <div className="bg-slate-300 min-h-screen flex items-center justify-center p-4">
       <div className="rounded-lg bg-white w-full max-w-md text-center p-6 shadow-lg">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Sign In</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Sign In</h1>
         <Heading label={"Sign in"} />
         <SubHeading label={"Enter your credentials to access your account"} />
 
