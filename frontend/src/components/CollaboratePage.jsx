@@ -42,33 +42,38 @@ const CollaboratePage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Collaborate on a Spreadsheet</h2>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4">
+      <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 mb-6 text-center">
+        Collaborate on a Spreadsheet
+      </h2>
       <input
         type="text"
         value={sheetId}
         onChange={handleSheetIdChange}
         placeholder="Enter Sheet ID"
-        className="border p-2 rounded mb-4 w-1/3"
+        className="border p-2 rounded mb-4 w-full max-w-md"
       />
       <button
         onClick={handleCollaborate}
-        className="bg-blue-500 text-white text-lg py-2 px-6 rounded-lg mb-4 shadow"
+        className="bg-blue-500 text-white text-lg py-2 px-6 rounded-lg mb-4 shadow w-full max-w-md"
       >
         Collaborate
       </button>
-      {errorMessage && <p className="text-red-500">{errorMessage}</p>}
+      
+      {errorMessage && (
+        <p className="text-red-500 text-center">{errorMessage}</p>
+      )}
 
-      <div className="flex gap-4 mt-6">
+      <div className="flex flex-col md:flex-row gap-4 mt-6 w-full max-w-md">
         <button
           onClick={handleGoBack}
-          className="bg-gray-300 text-black text-lg py-2 px-6 rounded-lg shadow"
+          className="bg-gray-300 text-black text-lg py-2 px-6 rounded-lg shadow w-full"
         >
           Go Back
         </button>
         <button
           onClick={handleLogout}
-          className="bg-red-500 text-white text-lg py-2 px-6 rounded-lg shadow"
+          className="bg-red-500 text-white text-lg py-2 px-6 rounded-lg shadow w-full"
         >
           Log Out
         </button>

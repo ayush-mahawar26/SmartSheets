@@ -66,7 +66,7 @@ io.on('connection', (socket) => {
         const newSheet = new Sheets({
           sheetid: sheetId,
           data: emptyData,
-          sheetName: `Sheet ${sheetId}`,
+          sheetName: `Sheet: ${sheetId}`,
         });
 
         await newSheet.save();
