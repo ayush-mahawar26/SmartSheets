@@ -64,38 +64,32 @@ sheetRoute.get(`/new`, authMiddleWare, async (req, res) => {
   });
 });
 
-// get All Sheets of user
-// sheetRoute.get("/all", authMiddleWare, async (req, res) => {
-//   const userid = req.userid;
 
-//   const sheets = await Sheets.find({
-//     owner: userid,
-//   });
-
-//   if (!sheets)
-//     return res.json({
-//       code: 500,
-//       mssg: "Error while fetching sheets",
-//     });
-
-//   return res.json({
-//     code: 200,
-//     mssg: "Sheets fetched sucessfully",
-//     data: sheets,
-//   });
-// });
-
-sheetRoute.get("/all",async (req, res) => {
+sheetRoute.get("/owned", authMiddleWare, async (req, res) => {
   try {
-    const sheets = await Sheets.find().select('-data'); // Fetch all sheets from the database
-    res.json(sheets); // Send the sheets as a JSON response
+    const userId = req.userid;
+
+    const sheets = await Sheets.find({owner: userId}).select('-data');
+
+    res.json(sheets);
+  } catch (error) {
+    console.error('Error fetching sheets:', error);
+    res.status(500).json({ message: 'Failed to fetch sheets' });
+  }
+});
+sheetRoute.get("/collaborated", authMiddleWare, async (req, res) => {
+  try {
+    const userId = req.userid;
+
+    const sheets = await Sheets.find({collaborators: userId}).select('-data');
+
+    res.json(sheets);
   } catch (error) {
     console.error('Error fetching sheets:', error);
     res.status(500).json({ message: 'Failed to fetch sheets' });
   }
 });
 
-// get sheet by id
 sheetRoute.get('/:sheetId', async (req, res) => {
   try {
     const sheet = await Sheets.findOne({ sheetid: req.params.sheetId });
@@ -106,6 +100,29 @@ sheetRoute.get('/:sheetId', async (req, res) => {
   } catch (error) {
     console.error('Error fetching sheet:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+sheetRoute.post("/:sheetId/collaborate", authMiddleWare, async (req, res) => {
+  try {
+    const { sheetId } = req.params;
+    const userId = req.userid;
+
+    const sheet = await Sheets.findOne({ sheetid: sheetId });
+
+    if (!sheet) {
+      return res.status(404).json({ message: "Sheet ID not available" });
+    }
+
+    if (!sheet.collaborators.includes(userId) && !sheet.owner.equals(userId)) {
+      sheet.collaborators.push(userId);
+      await sheet.save();
+    }
+
+    res.status(200).json({ message: "User added as collaborator" });
+  } catch (error) {
+    console.error("Error in collaboration:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 

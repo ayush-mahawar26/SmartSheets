@@ -22,6 +22,7 @@ const signinBody = zod.object({
 userRoute.get("/me", authMiddleWare, async (req, res) => {
   try{
     const user = await User.findById(req.userid);
+    // console.log(req.userid);
     if(!user) {
       return res.status(411).json({
         message: "User not found"

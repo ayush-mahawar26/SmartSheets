@@ -11,8 +11,8 @@ const spreadsheetSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  // owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Reference to the user who owns the spreadsheet
-  // collaborators: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // List of user IDs with access
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Reference to the user who owns the spreadsheet
+  collaborators: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // List of user IDs with access
   data: [], // Array of cells
   sheetName: { type: String, required: true }, // Name of the sheet
   createdAt: { type: Date, default: Date.now }, // Timestamp for creation

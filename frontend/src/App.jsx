@@ -24,7 +24,7 @@ function App() {
         <Route path="/signin" element={<Signin />} />
         <Route path="/collaborate" element={<CollaboratePage />} />
         <Route
-            path="/testing/:sheetId"
+            path="/sheet/:sheetId"
             element={
               <ProtectedRoute>
                 <Test />

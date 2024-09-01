@@ -11,17 +11,18 @@ const CollaboratePage = () => {
   };
 
   const handleCollaborate = () => {
-    fetch(`http://localhost:3000/sheet/${sheetId}`, {
-      method: 'GET',
+    fetch(`http://localhost:3000/sheet/${sheetId}/collaborate`, {
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json',
       },
     })
       .then(response => {
         if (response.status === 404) {
           setErrorMessage('Sheet ID not available');
         } else if (response.status === 200) {
-          navigate(`/testing/${sheetId}`);
+          navigate(`/sheet/${sheetId}`);
         } else {
           setErrorMessage('An error occurred. Please try again.');
         }
@@ -59,7 +60,7 @@ const CollaboratePage = () => {
       >
         Collaborate
       </button>
-      
+
       {errorMessage && (
         <p className="text-red-500 text-center">{errorMessage}</p>
       )}

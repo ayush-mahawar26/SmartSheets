@@ -9,7 +9,8 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userDetails, setUserDetails] = useState(null);
-  const [sheets, setSheets] = useState([]);
+  const [ownedSheets, setOwnedSheets] = useState([]);
+  const [collaboratedSheets, setCollaboratedSheets] = useState([]);
 
   const capitalizeFirstLetter = (string) => {
     if (!string) return '';
@@ -34,8 +35,8 @@ const LandingPage = () => {
           console.error('Error fetching user details:', error);
         });
     }
-    // Fetch sheets data
-    fetch('http://localhost:3000/sheet/all', {
+
+    fetch('http://localhost:3000/sheet/owned', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -43,24 +44,38 @@ const LandingPage = () => {
     })
       .then(response => response.json())
       .then(data => {
-        setSheets(data);
+        setOwnedSheets(data);
       })
       .catch(error => {
-        console.error('Error fetching sheets:', error);
+        console.error('Error fetching owned sheets:', error);
+      });
+
+    fetch('http://localhost:3000/sheet/collaborated', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then(response => response.json())
+      .then(data => {
+        setCollaboratedSheets(data);
+      })
+      .catch(error => {
+        console.error('Error fetching collaborated sheets:', error);
       });
   }, []);
 
   const handleNewSpreadsheet = () => {
     if (isLoggedIn) {
       const sheetId = uuid();
-      navigate(`/testing/${sheetId}`);
+      navigate(`/sheet/${sheetId}`);
     } else {
       navigate('/signin');
     }
   };
 
   const handleFileClick = (sheetId) => {
-    navigate(`/testing/${sheetId}`);
+    navigate(`/sheet/${sheetId}`);
   };
 
   const handleCollaborateClick = () => {
@@ -72,10 +87,10 @@ const LandingPage = () => {
   };
 
   const handleSignOut = () => {
-    localStorage.removeItem('token'); // Remove the token from local storage
+    localStorage.removeItem('token');
     setIsLoggedIn(false);
     setUserDetails(null);
-    navigate('/signin'); // Redirect to the login page
+    navigate('/signin');
   };
 
   return (
@@ -109,13 +124,35 @@ const LandingPage = () => {
 
       {/* Main Content */}
       <div className="flex-1 p-6 md:p-10 bg-[#F9FBFD] md:ml-[33%] overflow-y-auto">
-        <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-6">Existing Files</h2>
+        <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-10">
+          All Available Sheets
+        </h1>
 
-        {sheets.length === 0 ? (
+        <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-6">Your Sheets</h2>
+
+        {ownedSheets.length === 0 ? (
           <p className="text-gray-600 text-lg md:text-2xl text-center mt-20">No files available</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sheets.map(sheet => (
+            {ownedSheets.map(sheet => (
+              <FileCard
+                key={sheet._id}
+                title={sheet.sheetName}
+                lastModified={new Date(sheet.updatedAt).toLocaleDateString()}
+                image={demoPage}
+                onClick={() => handleFileClick(sheet.sheetid)}
+              />
+            ))}
+          </div>
+        )}
+
+        <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-6 mt-10">Collaborated Sheets</h2>
+
+        {collaboratedSheets.length === 0 ? (
+          <p className="text-gray-600 text-lg md:text-2xl text-center mt-20">No collaborated files available</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {collaboratedSheets.map(sheet => (
               <FileCard
                 key={sheet._id}
                 title={sheet.sheetName}

@@ -13,9 +13,6 @@ const { Sheets } = require("./models/sheet_model.js");
 
 const _ = require('lodash');
 
-function deepMerge(target, source) {
-  return _.merge({}, target, source);
-}
 
 // socket server
 const server = http.createServer(app);
@@ -48,25 +45,30 @@ app.use("/sheet", sheetRoute);
 io.on('connection', (socket) => {
   console.log('New client connected');
 
-  // Handle when a client joins a sheet
-  socket.on('joinSheet', async ({ sheetId }) => {
-    console.log(`Client joined sheet: ${sheetId}`);
+  socket.on('joinSheet', async ({ sheetId, userId,FileName }) => {
+    console.log(`Client with userId: ${userId} joined sheet: ${sheetId}`);
     socket.join(sheetId);
 
     try {
       const sheet = await Sheets.findOne({ sheetid: sheetId });
 
       if (sheet) {
-        socket.emit('load-document', sheet.data);
+        if (sheet.owner.equals(userId) || sheet.collaborators.includes(userId)) {
+          socket.emit('load-document', sheet.data);
+        } else {
+          socket.emit('unauthorized', 'You do not have access to this sheet.');
+        }
       } else {
         const emptyData = Array(100)
           .fill()
           .map(() => Array(50).fill(''));
+          console.log(FileName);
 
         const newSheet = new Sheets({
           sheetid: sheetId,
+          owner: userId,
           data: emptyData,
-          sheetName: `Sheet: ${sheetId}`,
+          sheetName: FileName,
         });
 
         await newSheet.save();
@@ -74,34 +76,42 @@ io.on('connection', (socket) => {
       }
     } catch (error) {
       console.error('Error loading document from MongoDB:', error);
+      socket.emit('error', 'An error occurred while loading the document.');
     }
   });
 
-  // Handle when a client saves changes to the sheet
-  socket.on('save-document', async ({ sheetId, data }) => {
+  socket.on('save-document', async ({ sheetId, data, userId, FileName }) => {
     try {
       const existingDocument = await Sheets.findOne({ sheetid: sheetId });
 
       if (existingDocument) {
-        existingDocument.data = data;
-        existingDocument.updatedAt = new Date();
-        await existingDocument.save();
+        if (existingDocument.owner.equals(userId) || existingDocument.collaborators.includes(userId)) {
+          existingDocument.data = data;
+          if (FileName) {
+            existingDocument.sheetName = FileName;
+          }
+          existingDocument.updatedAt = new Date();
+          await existingDocument.save();
 
-        // Broadcast the updated data to other clients in the same room
-        socket.to(sheetId).emit('document-updated', { sheetId, data });
+          socket.to(sheetId).emit('document-updated', { sheetId, data, FileName: existingDocument.sheetName });
+        } else {
+          socket.emit('unauthorized', 'You do not have permission to edit this sheet.');
+        }
       } else {
         console.log('No document found with the given sheetId');
+        socket.emit('error', 'No document found with the given sheetId.');
       }
     } catch (error) {
       console.error('Error updating document in MongoDB:', error);
+      socket.emit('error', 'An error occurred while saving the document.');
     }
   });
+
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
   });
 });
-
 
 io.on("disconnect", (socket) => {
   console.log("socket disconnected !! ", socket.id);

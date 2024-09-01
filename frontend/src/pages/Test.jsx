@@ -19,6 +19,28 @@ const Test = () => {
   const { sheetId } = useParams();
   const navigate = useNavigate();
 
+  const [userDetails, setUserDetails] = useState(null);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            fetch('http://localhost:3000/user/me', {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    setUserDetails(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching user details:', error);
+                });
+        }
+    }, []);
+
+    console.log(userDetails);
 
   const handleHome = () => {
     navigate("/");
@@ -28,7 +50,7 @@ const Test = () => {
     setTab("Collaborate")
     navigate("/collaborate");
   };
- 
+
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -137,7 +159,7 @@ const Test = () => {
     toast.success('Data pasted');
   };
 
-  
+
 
   const handleDelete = () => {
     let hotInstance = hotRef.current.hotInstance;
@@ -189,13 +211,14 @@ const Test = () => {
     const newName = prompt("Enter New File Name");
     if (newName) {
       setFileName(newName);
+      socket.emit("save-document", { sheetId, data: Data, userId: userDetails._id, FileName: newName });
     }
   };
 
   const handleNewFile = () => {
     const id = uuid();
     setFileName("Untitled Spreadsheet");
-    navigate(`/testing/${id}`);
+    navigate(`/sheet/${id}`);
   };
 
   const handleImport = () => {
@@ -221,7 +244,7 @@ const Test = () => {
     input.click();
   };
 
-  const handleLogout = () => { 
+  const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/signin');
    }
@@ -262,7 +285,6 @@ const Test = () => {
 
   const handleAfterChange = (changes) => {
     if (changes && changes.length > 0) {
-      console.log("updated");
       const newData = [...Data];
       changes.forEach(([row, col, oldValue, newValue]) => {
         if (newValue !== oldValue) {
@@ -270,7 +292,8 @@ const Test = () => {
         }
       });
       setData(newData);
-      socket.emit("save-document", { sheetId, data: newData });
+    //   socket.emit("save-document", { sheetId, data: newData });
+      socket.emit("save-document", { sheetId, data: newData, userId: userDetails._id });
     }
   };
 
@@ -305,23 +328,35 @@ const Test = () => {
   }, []);
 
   useEffect(() => {
-    const s = io("http://localhost:3000");
-    setSocket(s);
+    if (userDetails && userDetails._id) {
+      const s = io("http://localhost:3000");
+      setSocket(s);
 
-    s.emit("joinSheet", { sheetId });
+      s.emit("joinSheet", { sheetId, userId: userDetails._id,FileName });
 
-    s.on("load-document", (loadedData) => {
-      setData(loadedData);
-    });
+      s.on("load-document", (loadedData) => {
+        setData(loadedData);
+      });
 
-    s.on("document-updated", ({ data: updatedData }) => {
-      setData(updatedData);
-    });
+      s.on("document-updated", ({ data: updatedData }) => {
+        setData(updatedData);
+      });
 
-    return () => {
-      s.disconnect();
-    };
-  }, [sheetId]);
+      s.on("unauthorized", (message) => {
+        alert(message);  // Handle unauthorized access (e.g., display an alert or redirect the user)
+        navigate("/");  // Redirect the user to the home page or another appropriate page
+      });
+
+      s.on("error", (message) => {
+        alert(message);  // Handle errors (e.g., display an alert)
+      });
+
+      return () => {
+        s.disconnect();
+      };
+    }
+  }, [userDetails, sheetId]);
+
 
   return (
     <div>
